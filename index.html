@@ -97,16 +97,7 @@
 
 <h2>Fuzz variables</h2>
 
-<p>Sniff the <code>HTTP</code> traffic through <code>Burp</code> proxy and identify <code>5</code> potential fuzz points on that  <code>GET</code> request.</p>
-
-<ul>
-<li>HTTP method</li>
-<li>url_path</li>
-<li>ip_address</li>
-<li>port</li>
-<li>user_agent</li>
-</ul>
-
+<p>Sniff the <code>HTTP</code> traffic through <code>Burp</code> proxy and identify <code>5</code> potential fuzz points (HTTP method, url_path, ip_address, port, user_agent header) on that  <code>GET</code> request.</p>
 
 <p><img src="/downloads/code/2016/hpnnm-B.07.53/http_sniff.png" alt="http-sniff" /></p>
 
@@ -2292,7 +2283,7 @@ Otherwise while during the shellcode execution, an exception will occur and the 
 
 <p>At the end of my journey, I found my final exploit code was turned out entirely different from <strong><em>muts</em></strong> <a href="https://www.exploit-db.com/exploits/5342/">EDB-ID #5342</a>.</p>
 
-<p>The reason was, in this particular <code>B.07.53</code> release, application validates the length of <code>GET</code> data and that restricted me to deliver the payload the same way as <strong>muts</strong> did.</p>
+<p>The reason was, in this particular <code>B.07.53</code> release, application validates the length of <code>GET</code> request and that restricted me to deliver the payload the same way as <strong>muts</strong> did.</p>
 
 <h2>References</h2>
 
