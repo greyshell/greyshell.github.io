@@ -1,0 +1,393 @@
+/*
+
+Theme Name: Paper Resume
+Description: 'This is the HTML version of the Paper Resume HTML template. Enjoy!'
+Author: Norbert Ursu
+Author URI: http://www.zappd.com/
+Version: 2.0
+
+*/
+
+/* Import other stylesheets 
+-----------------------------------------------------------------------------*/ 
+@import url('reset.css');
+@import url('../js/fancybox/jquery.fancybox-1.3.4.css');
+@import url('http://fonts.googleapis.com/css?family=Droid+Serif:400,700');
+/* Typography
+-----------------------------------------------------------------------------*/ 
+a {
+	color: #1B86BB;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+h1 { 
+	font-family: 'Droid Serif', serif;
+	font-size: 5.5em;
+	text-transform: uppercase;
+	font-weight: normal;
+	color: #3b3b3b;
+	line-height: 90%;
+	margin: 15px 0 10px;
+}
+
+h2 { 
+	font-size: 1.3em;
+	color: #786557;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	margin-top: 15px;
+}
+ 
+.period {
+	color: #a6423e;
+	text-transform: uppercase;
+	font-size: 1.1em;
+	float: right; 
+	padding: 5px 8px;
+	border: 1px solid #ccc;
+	margin-top: -15px;
+	box-shadow: 1px 1px 5px #dedede;
+	background-color: #f4f4ee;
+	background-color: rgba(255, 255, 255, .30);
+}
+ 
+h3 {
+	font-size: 1.2em;
+	color: #786557;
+	font-weight: normal;
+	margin-bottom: 10px;
+}
+
+ ul, ol {
+	padding-left: 15px;
+	list-style: inside;
+	list-style-type: disc;
+	margin: 15px 0;
+}
+
+ol {
+	list-style-type: decimal;
+}
+	
+	ul li, ol li {
+		font-size: 1.15em;
+		margin: 8px 0;
+	}
+
+p {
+	font-size: 1.2em;
+	margin: 0 0 15px;
+	text-align: justify;
+}
+
+table {
+	border-collapse: collapse;
+	color: #666;
+	font-size: 1.2em;
+	margin: 3px 0 15px;
+	box-shadow: 1px 1px 5px #dedede;
+	background-color: rgba(255, 255, 255, .20)
+}
+
+table.left { float: left; margin-right: 15px; }
+table.center { margin: 5px auto 15px; }
+table.right { float: right; margin-left: 15px; }
+table.w25 {	width: 25%; }
+table.w50 {	width: 50%; }
+table.w75 {	width: 75%; }
+table.w100 { width: 100%; }
+
+table td, table th {
+	border: 1px solid #bbb;
+	padding: 4px;
+	text-align: center;
+}
+
+/* Main Stylesheet
+-----------------------------------------------------------------------------*/ 
+body {
+    font: 62.5%/1.5  "Lucida Grande", "Lucida Sans", Verdana, sans-serif;
+    color: #5a5a5a;
+    text-align:center;
+    padding: 40px 0 30px;
+}
+
+	.light-wood { background: url('images/colors/light-wood.jpg') repeat 0 0; }
+	.dark-wood { background: url('images/colors/dark-wood.jpg') repeat 0 0; }
+
+#container {
+	width: 835px;
+	margin: 0px auto;
+	position: relative;
+}
+
+	.original { background: url('images/colors/paper/paper-original.png') repeat-y top center; }
+	.dusty { background: url('images/colors/paper/paper-dusty.png') repeat-y top center; }
+	.math { background: url('images/colors/paper/paper-math.png') repeat-y top center; }
+
+	#container-top {
+		background: url('images/container-top.png') repeat-x top right;
+		height: 8px;
+		width: 838px;
+		margin: 0px auto;
+
+	}
+
+	#container-bottom {
+		background: url('images/container-bottom.png') no-repeat top right;
+		height: 12px;
+		width: 838px;
+		margin: 0px auto;
+	}
+
+/* Sections + Title
+-----------------------------------------------------------------------------*/ 
+.section {
+	text-align: left;
+	margin: 0 auto;
+	padding: 0px 40px 0px 70px;
+	background-position: top left;
+	background-repeat: repeat-y;
+	overflow: hidden;
+}
+	
+	/* Bold */
+	.bold-blue { background: url('images/colors/bold/blue.png') repeat-y top left; }
+	.bold-dark-green { background: url('images/colors/bold/dark-green.png') repeat-y top left; }
+	.bold-green { background: url('images/colors/bold/green.png') repeat-y top left; }
+	.bold-orange { background: url('images/colors/bold/orange.png') repeat-y top left; }
+	.bold-pink { background: url('images/colors/bold/pink.png') repeat-y top left; }
+	.bold-red { background: url('images/colors/bold/red.png') repeat-y top left; }
+	
+	/* Muted */
+	.muted-blue { background: url('images/colors/muted/blue.png') repeat-y top left; }
+	.muted-crimson { background: url('images/colors/muted/crimson.png') repeat-y top left; }
+	.muted-dark-blue { background: url('images/colors/muted/dark-blue.png') repeat-y top left; }
+	.muted-gold { background: url('images/colors/muted/gold.png') repeat-y top left; }
+	.muted-green { background: url('images/colors/muted/green.png') repeat-y top left; }
+	.muted-olive { background: url('images/colors/muted/olive.png') repeat-y top left; }
+	.muted-red { background: url('images/colors/muted/red.png') repeat-y top left; }
+	.muted-vermillion { background: url('images/colors/muted/vermillion.png') repeat-y top left; }
+
+	/* Retro */
+	.retro-black { background: url('images/colors/retro/black.png') repeat-y top left; }
+	.retro-blue { background: url('images/colors/retro/blue.png') repeat-y top left; }
+	.retro-dark-blue { background: url('images/colors/retro/dark-blue.png') repeat-y top left; }
+	.retro-green { background: url('images/colors/retro/green.png') repeat-y top left; }
+	.retro-olive { background: url('images/colors/retro/olive.png') repeat-y top left; }
+	.retro-orange { background: url('images/colors/retro/orange.png') repeat-y top left; }
+	.retro-pink { background: url('images/colors/retro/pink.png') repeat-y top left; }
+	.retro-red { background: url('images/colors/retro/red.png') repeat-y top left; }
+	.retro-yellow { background: url('images/colors/retro/yellow.png') repeat-y top left; }	
+
+	.title {
+		width: 20px;
+		padding: 0 10px;	
+		margin: 15px 0 15px -70px;
+		font-size: 22px;
+		font-weight: bold;
+		color: #fff;
+		font-family: 'Droid Serif', serif;	
+		text-align: center;
+		line-height: 115%;
+		text-transform: uppercase;
+		text-shadow: 1px 1px 2px #555;
+		float: left;
+	}	
+	
+/* Personal Information + Sidebar
+-----------------------------------------------------------------------------*/ 
+
+ul#info {
+	width:  510px;
+	font-size: 0.95em;
+	margin-bottom: 10px;
+	padding-left: 0;
+	list-style: none;
+	list-style-type: none;
+}
+
+	ul#info li {
+		display: block;
+		margin: 0;
+		padding: 8px 0 8px 25px;
+		*padding: 7px 0 8px 10px;
+		border-bottom: 1px dashed #bfbebe;
+		font-weight: bold;
+		background-image: url('images/icons/icons.png');
+		background-repeat: no-repeat;
+		position: relative;
+	}
+	
+		ul#info li.name { background-position: -4px -1px; }
+		ul#info li.date { background-position: -4px -38px; }
+		ul#info li.addr { background-position: -4px -76px; }
+		ul#info li.cell { background-position: -5px -113px; }
+		ul#info li.mail { background-position: -4px -150px; }
+		ul#info li.link { background-position: -4px -188px; }
+	
+		ul#info li span {
+			position: absolute;
+			right: 0;
+			font-weight: normal;
+		}
+
+#sidebar {
+	float: right;
+	text-align: center;
+	margin: 18px 0 0 40px;
+	font-size: 1.2em;
+}
+
+#portrait {
+	position: relative;
+	background: #fff;
+	padding: 10px;
+	padding-bottom: 4px;
+	width: 152px;
+	border: 1px solid #d6d4d4;
+	border-bottom: 1px solid #bfbdbd;
+	margin-bottom: 15px;
+	text-align: center;
+}
+
+	#portrait #image img {
+		display: block;
+		margin-bottom: 6px;
+		width: 152px;
+	}
+
+	#portrait .shadow {
+		position: absolute;
+		background: url('images/image-shadow.png') no-repeat center bottom;
+		width: 172px;
+		height: 12px;
+		left: 0;
+		bottom: -13px;
+	}
+
+#sidebar a.vcard {
+	background: url('images/icons/icons.png') -4px -305px no-repeat;
+	margin: 0px 10px;
+	padding-left: 21px;
+}
+
+#sidebar a.print {
+	background: url('images/icons/icons.png') -4px -342px no-repeat;
+	margin: 0px 10px;
+	padding-left: 21px;
+	cursor: pointer;
+}
+
+/* Sklls
+-----------------------------------------------------------------------------*/ 
+
+ul.stars {
+  overflow: hidden;
+  padding-left: 0;
+  list-style: none;
+  list-style-type: none;
+}
+
+	ul.stars li {
+		width: 315px;
+		float: left;
+		margin: 0 21px;
+		padding: 8px 0;
+		vertical-align: middle;
+		font-size: 1.2em;
+		border-bottom: 1px dashed #bfbebe;
+		background-repeat: no-repeat;
+		background-position: 100% 11px;
+	} ul.stars li em { float: right; visibility: hidden; }
+		
+	ul.stars li.s0 { background-image: url('images/0stars.gif'); }
+	ul.stars li.s1 { background-image: url('images/1star.gif'); }
+	ul.stars li.s2 { background-image: url('images/2stars.gif'); }
+	ul.stars li.s3 { background-image: url('images/3stars.gif'); }
+	ul.stars li.s4 { background-image: url('images/4stars.gif'); }
+	ul.stars li.s5 { background-image: url('images/5stars.gif'); }
+
+
+/* Contact Section
+-----------------------------------------------------------------------------*/ 
+#fancybox-outer {
+	background: #edebe8 url('images/dusty.png') repeat top left;
+}
+
+#fancybox-content {
+	border-width: 0 !important;
+	
+	padding: 10px;
+}
+
+#contact { display: none; }
+
+#contact_form {
+	width: 500px;
+	text-align: left;
+	margin-bottom: 5px;
+}
+	
+#contact_form #submit {
+	background: url('images/send-email.png');
+	border: 0;
+	width: 88px;
+	height: 32px;
+	cursor: pointer;
+	margin: 10px 10px 0 0;
+	line-height: 26px;
+}
+
+#contact_form #submit:hover {
+	background-position: 0 32px;
+}
+
+#contact_form h2 { padding-top: 5px; margin-top: 0; }
+
+#contact_form label span {
+	display: block;
+	margin-top: 10px;
+	font-size: 1.1em;
+}
+
+#contact_form .req {
+	padding: 5px;
+	border: 2px solid #dadada;
+	width: 220px;
+}
+
+#contact_form .req2 {
+	display: none;
+}
+
+#contact_form textarea {
+	width: 450px !important;
+	height: 110px;
+}
+
+#contact_form #message {
+	vertical-align: middle;
+}
+
+#status {
+	padding: 5px 0 5px 21px;
+	font-size: 1.1em;
+}
+
+.loading {
+	background: url('images/icons/loading.gif') no-repeat 0 50%;
+ }
+
+.error {
+	background: url('images/icons/icons.png') no-repeat -4px -263px;
+ }
+
+.success {
+	background: url('images/icons/icons.png') no-repeat -5px -226px;
+ }

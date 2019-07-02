@@ -1,0 +1,107 @@
+/* @override http://paper/wp-content/themes/resume/css/print.css */
+
+body {
+	font-family: Verdana, Arial, sans-serif;
+	color: #222;
+	background-image: none !important;
+	padding: 0;
+	margin: 0;
+}
+
+h1, h2, h3, h4, h5 { color: #222; }
+
+h1 {
+	font-size: 3.0em;
+	font-family: Verdana, Arial, sans-serif;
+}
+
+#container {
+	background-image: none !important;
+	background-color: #fff;
+}
+
+#sidebar a { display: none; }
+#sidebar a#image { display: block; }
+#sidebar .shadow { display: none; }
+.vcard, .print { display: none; }
+
+#container, #container-top, #container-bottom {
+	width: 700px;
+	background: none;
+	margin: 0 auto;
+	padding: 0;
+}
+
+ul#info li {
+	padding-left: 0;
+	background-image: none;
+}
+
+ul#info li a {
+	color: #222;
+}
+
+.section {
+	width: 700px;
+	margin: 0 auto;
+	padding: 0 0 20px;
+	page-break-after: avoid;
+	background: none !important;
+}
+
+.section:first-child {
+	display: none;
+}
+
+.section .title {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	display: block;
+	color: #333;
+	text-shadow: none;
+	font-size: 22px;
+	font-weight: bold;
+	line-height: 100%;
+	float: none;	
+	text-align: center;	
+	font-family: Georgia, sans-serif;
+}
+
+.section:before {
+	font-size: 15px;
+	color: #333;
+	letter-spacing: 1.5px;
+	border-bottom: 1px solid #ddd;
+	padding: 2px 0;
+	margin-bottom: 15px;
+	display: block;
+	text-align: center;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-family: Georgia, sans-serif;
+}
+
+table {
+	box-shadow: none;
+}
+
+ul.stars li {
+	background-image: none !important;
+	float: left !important;
+	margin-left: 10px;
+}
+
+ul.stars li.s0::after { float: right; content: "0 stars"; }
+ul.stars li.s1::after { float: right; content: "1 star"; }
+ul.stars li.s2::after { float: right; content: "2 stars"; }
+ul.stars li.s3::after { float: right; content: "3 stars"; }
+ul.stars li.s4::after { float: right; content: "4 stars"; }
+ul.stars li.s5::after { float: right; content: "5 stars"; }
+
+.period {
+	color: #222;
+	background-image: none;
+	box-shadow: none;
+	border: 1px solid #ddd;
+}
