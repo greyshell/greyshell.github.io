@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-07-02T01:53:42-07:00</updated>
+  <updated>2019-07-02T02:04:10-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -38,7 +38,7 @@
 
 <p>Install HP OpenView NNM (release - <code>B.07.53</code>) on <code>Windows 2003-R2-SP2</code>.</p>
 
-<p>Browse it’s web interface  - <code>http://172.16.232.178:7510/topology/home</code> to verify everything is up and running.</p>
+<p>Browse it’s web interface  - <code>http://172.16.232.198:7510/topology/home</code> to verify everything is up and running.</p>
 
 <p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/hpnnm_version.png" alt="hpnnm_version" /></p>
 
