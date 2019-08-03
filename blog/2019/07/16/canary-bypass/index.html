@@ -204,7 +204,7 @@
 </ol>
 
 
-<h2>The Bug</h2>
+<h2>The Bugs</h2>
 
 <h4>Bug 1</h4>
 
@@ -223,10 +223,11 @@
 
 <ul>
 <li>Similarly, while providing the input through <code>description</code> variable, we can write something where <code>heap pointer</code> points and can potentially overflow the heap memory if we provide the input more than <code>100</code> bytes.</li>
-<li><p>If we chain those bugs together, then while giving input through <code>name</code> variable, we can overwrite the <code>heap_pointer</code> address then providing input through <code>description</code> variable, we can write something where the <code>heap_pointer</code> points.</p></li>
-<li><p>In short, we can write something in our <code>specified</code> address.</p></li>
+<li>If we chain those bugs together, then while giving input through <code>name</code> variable, we can overwrite the <code>heap_pointer</code> address then providing input through <code>description</code> variable, we can write something where the <code>heap_pointer</code> points.</li>
 </ul>
 
+
+<p>In short, we can write something in our <code>specified</code> address.</p>
 
 <h2>Static Analysis</h2>
 
