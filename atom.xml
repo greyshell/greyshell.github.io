@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-11-23T00:37:04-08:00</updated>
+  <updated>2019-11-23T00:49:51-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -574,7 +574,7 @@
 
 <blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / arraylist.</p></blockquote>
 
-<h2>Demystifying a KnownGadget Chain</h2>
+<h2>Demystifying a Known Gadget Chain</h2>
 
 <blockquote><ul>
 <li>Technique is called property oriented programming.</li>
@@ -584,11 +584,11 @@
 <li>HashMap</li>
 </ul>
 </li>
-<li><p>commons-collections-3.2.2.jar:</p>
+<li>commons-collections-3.2.2.jar:
 
 <ul>
-<li><p>Transformer, ConstantTransformer, InvokerTransformer, ChainedTransformer</p></li>
-<li><p>LazyMap, TiedMapEntry, HashBag</p></li>
+<li>Transformer, ConstantTransformer, InvokerTransformer, ChainedTransformer</li>
+<li>LazyMap, TiedMapEntry, HashBag</li>
 </ul>
 </li>
 </ul>
@@ -642,7 +642,7 @@
 
 <ul>
 <li><p>Reflection is an API which is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime</code>.</p></li>
-<li><p><strong>Key Point:</strong> Through reflection we can <code>invoke</code> <code>methods</code> at <code>runtime</code> irrespective of the access specifier used with them.</p></li>
+<li><p><strong>Key Point:</strong> Through reflection API, we can <code>invoke</code> <code>methods</code> at <code>runtime</code> irrespective of the access specifier used with them.</p></li>
 </ul>
 
 
@@ -848,7 +848,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Initializing a <code>ConstantTransformar</code> with <code>Runtime.class</code> so that we we call transform() method with any object it returns the same <code>Runtime.class</code>.</p>
+<p>Initializing a <code>ConstantTransformar</code> with <code>Runtime.class</code> so that we we call <code>transform()</code> method with any object it returns the same <code>Runtime.class</code>.</p>
 
 <h3>InvokerTransformer</h3>
 
@@ -1548,9 +1548,9 @@
 </span><span class='line'>            <span class="o">=&gt;</span> <span class="kt">int</span> <span class="nf">hash</span><span class="o">(</span><span class="n">Object</span> <span class="n">key</span><span class="o">)</span>
 </span><span class='line'>                <span class="o">=&gt;</span> <span class="n">tidemapentry</span><span class="o">.</span><span class="na">hashCode</span><span class="o">();</span>  <span class="c1">// IMP</span>
 </span><span class='line'>                    <span class="o">=&gt;</span> <span class="n">tidemapentry</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
-</span><span class='line'>                    <span class="o">=&gt;</span> <span class="n">lazymap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">key</span><span class="o">);</span>  <span class="c1">// IMP</span>
-</span><span class='line'>                    <span class="o">=&gt;</span> <span class="k">this</span><span class="o">.</span><span class="na">factory</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>  <span class="c1">// IMP</span>
-</span><span class='line'>                        <span class="o">=&gt;</span> <span class="n">Runtime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">exec</span><span class="o">(</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">)</span>
+</span><span class='line'>                        <span class="o">=&gt;</span> <span class="n">lazymap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">key</span><span class="o">);</span>  <span class="c1">// IMP</span>
+</span><span class='line'>                            <span class="o">=&gt;</span> <span class="k">this</span><span class="o">.</span><span class="na">factory</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>  <span class="c1">// IMP</span>
+</span><span class='line'>                                <span class="o">=&gt;</span> <span class="n">Runtime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">exec</span><span class="o">(</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
