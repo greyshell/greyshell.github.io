@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-11-23T01:38:54-08:00</updated>
+  <updated>2019-11-23T01:40:27-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Insecure Deserialization in Java]]></title>
+    <title type="html"><![CDATA[Java Insecure Deserialization in Java]]></title>
     <link href="http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization/"/>
     <updated>2019-11-22T22:17:55-08:00</updated>
     <id>http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization</id>
