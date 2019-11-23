@@ -1615,7 +1615,7 @@
 
 <h3>The Solution</h3>
 
-<p>The most important thing that we need to taken care, is</p>
+<p>The most important thing to taken care, is</p>
 
 <ol>
 <li><p>During the serialization process, we need to wrap a <code>TiedMapEntry</code> Object in side a <code>HashBag</code> object, but somehow we need to <code>stop</code> the invocation of <code>TiedMapEntry.hashcode()</code> method when we add the TidemapEntry object into the <code>HashBag's</code> <code>HashMap</code> via  <code>add()</code> method.</p></li>
@@ -1623,7 +1623,7 @@
 </ol>
 
 
-<h3>Final Exploit</h3>
+<h4>Strategy to overcome the challenge</h4>
 
 <ol>
 <li>Create a <code>HashBag</code> instance and add any <code>Object</code> into it.</li>
@@ -1822,7 +1822,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h3>The Exploit</h3>
+<h3>Final Exploit Code</h3>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
