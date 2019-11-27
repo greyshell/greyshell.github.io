@@ -224,6 +224,8 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p><img src="/downloads/code/2019/java_insecure_deserialization/ser.png" alt="ser" /></p>
+
 <h2>Deserialization</h2>
 
 <p>Deserialization is the reverse process where the <code>byte stream</code> is used to <code>recreate</code> the <code>actual</code> Java object in memory.</p>
@@ -289,19 +291,27 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p><img src="/downloads/code/2019/java_insecure_deserialization/dser.png" alt="dser" /></p>
+
+<p>Recreate the same <code>asinha</code> object in the memory.</p>
+
+<p>However due to <code>transient</code> and <code>static</code> keyword, the <code>uid</code> and <code>password</code> fields have only the default values.</p>
+
 <h2>The Bug</h2>
 
 <ol>
 <li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is a vulnerable method.</p></li>
 <li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check</code>.</p></li>
-<li><p>Exception can only happen if type miss match occurs between the return object and expected object.</p></li>
+<li><p><code>Exception</code> can only happen if type miss match occurs between the return object and expected object.</p></li>
 </ol>
 
+
+<p><img src="/downloads/code/2019/java_insecure_deserialization/bad_dser.png" alt="bad_dser" /></p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>java.lang.ClassCastException: class java.lang.String cannot be cast to class User <span class="o">(</span>java.lang.String is in module java.base of loader <span class="s1">&#39;bootstrap&#39;</span><span class="p">;</span> User is in unnamed module of loader <span class="s1">&#39;app&#39;</span><span class="o">)</span>
-</span><span class='line'>    at BasicDeserialize.main<span class="o">(</span>BasicDeserialize.java:21<span class="o">)</span>
+</span><span class='line'>    at BasicDeserialize.main<span class="o">(</span>BasicDeserialize.java:20<span class="o">)</span>
 </span></code></pre></td></tr></table></div></figure>
 
 

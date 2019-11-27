@@ -4,7 +4,7 @@
   <title><![CDATA[Category: web-vuln | Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/blog/categories/web-vuln/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-11-27T01:51:44-08:00</updated>
+  <updated>2019-11-27T07:42:29-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -105,6 +105,8 @@ public class BasicSerialize {
 }
 </code></pre>
 
+<p><img src="/downloads/code/2019/java_insecure_deserialization/ser.png" alt="ser" /></p>
+
 <h2>Deserialization</h2>
 
 <p>Deserialization is the reverse process where the <code>byte stream</code> is used to <code>recreate</code> the <code>actual</code> Java object in memory.</p>
@@ -142,17 +144,25 @@ public class BasicDeserialize {
 }
 </code></pre>
 
+<p><img src="/downloads/code/2019/java_insecure_deserialization/dser.png" alt="dser" /></p>
+
+<p>Recreate the same <code>asinha</code> object in the memory.</p>
+
+<p>However due to <code>transient</code> and <code>static</code> keyword, the <code>uid</code> and <code>password</code> fields have only the default values.</p>
+
 <h2>The Bug</h2>
 
 <ol>
 <li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is a vulnerable method.</p></li>
 <li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check</code>.</p></li>
-<li><p>Exception can only happen if type miss match occurs between the return object and expected object.</p></li>
+<li><p><code>Exception</code> can only happen if type miss match occurs between the return object and expected object.</p></li>
 </ol>
 
 
+<p><img src="/downloads/code/2019/java_insecure_deserialization/bad_dser.png" alt="bad_dser" /></p>
+
 <pre><code class="bash">java.lang.ClassCastException: class java.lang.String cannot be cast to class User (java.lang.String is in module java.base of loader 'bootstrap'; User is in unnamed module of loader 'app')
-    at BasicDeserialize.main(BasicDeserialize.java:21)
+    at BasicDeserialize.main(BasicDeserialize.java:20)
 </code></pre>
 
 <ol>
