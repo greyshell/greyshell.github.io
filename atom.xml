@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-11-27T01:33:01-08:00</updated>
+  <updated>2019-11-27T01:51:44-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -1122,13 +1122,13 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Opening the gnome-calculator by chaining three transformer and executing transform() method.</p>
+<p>Opening the <code>gnome-calculator</code> by chaining three transformers and executing the <code>transform()</code> method.</p>
 
 <h3>ChainedTransformer</h3>
 
 <ul>
 <li>Shorten / compact the code for code execution.</li>
-<li><strong>Key Point:</strong> Takes an <code>array of transformers</code> during initialization and <code>chains</code> them maintaining their order.</li>
+<li><strong>Key Point:</strong> Takes an <code>array of transformers</code> during initialization and <code>chains</code> them carefully maintaining their execution order.</li>
 </ul>
 
 
