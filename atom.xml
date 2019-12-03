@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-11-27T07:51:41-08:00</updated>
+  <updated>2019-12-03T10:45:27-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit S]]></name>
@@ -2170,6 +2170,7 @@
 <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html</a></li>
 <li><a href="https://github.com/JackOfMostTrades/gadgetinspector">https://github.com/JackOfMostTrades/gadgetinspector</a></li>
 <li><a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java</a></li>
+<li><a href="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/demo_insecure_deserialization.zip">My proof of concept codes</a></li>
 </ul>
 
 ]]></content>
