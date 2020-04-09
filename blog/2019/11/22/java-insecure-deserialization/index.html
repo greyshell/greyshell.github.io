@@ -6,7 +6,7 @@
 <head>
   <meta charset="utf-8">
   <title>Insecure Deserialization in Java - Greyshell's Diary</title>
-  <meta name="author" content="Abhijit S">
+  <meta name="author" content="Abhijit Sinha">
 
   
   <meta name="description" content="I was always curious how the actual remote code execution occurs during the Insecure Deserialization process. So I thought of giving a try to &hellip;">
@@ -75,6 +75,8 @@
 
 
 <h2>Serialization</h2>
+
+<p>Before directly jump into the <code>gadget chain</code>, the lets start with the fundamental of <code>Serialization</code> / <code>Deserialization</code> process and try to understand the <strong>root cause</strong>.</p>
 
 <blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method</code>.</p>
 
@@ -763,6 +765,8 @@
 
 <h3>Command Execution using <code>Runtime</code></h3>
 
+<blockquote><p>First lets understand, how we can execute a command in Java.</p></blockquote>
+
 <ul>
 <li>We can use <code>Runtime</code> Object in Java to execute system command (i.e Running the gnome-calculator)</li>
 </ul>
@@ -806,6 +810,8 @@
 
 
 <h3>Reflection API</h3>
+
+<blockquote><p>What are the other ways, we can execute a command in Java.</p></blockquote>
 
 <ul>
 <li><p>Reflection is an API which is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime</code>.</p></li>
@@ -1266,7 +1272,11 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<blockquote><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></blockquote>
+<blockquote><ul>
+<li><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></li>
+<li><p>However, still we need to understand few more data structures to connect the dots.</p></li>
+</ul>
+</blockquote>
 
 <h3>HashMap</h3>
 
@@ -2222,6 +2232,16 @@
 
 <p><img src="/downloads/code/2019/java_insecure_deserialization/calc_rce.png" alt="" /></p>
 
+<p><strong>Key take away:</strong></p>
+
+<p>The whitelisting based prevention won&rsquo;t work if that whitelist contains</p>
+
+<ul>
+<li>All classes that used to build the chain => <code>RCE</code></li>
+<li>HashSet / HashMap / arraylist => <code>DoS</code></li>
+</ul>
+
+
 <h2>References</h2>
 
 <ul>
@@ -2230,7 +2250,6 @@
 <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html</a></li>
 <li><a href="https://github.com/JackOfMostTrades/gadgetinspector">https://github.com/JackOfMostTrades/gadgetinspector</a></li>
 <li><a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java</a></li>
-<li><a href="/downloads/code/2019/java_insecure_deserialization/demo_insecure_deserialization.zip">My proof of concept codes</a></li>
 </ul>
 
 </div>
@@ -2241,7 +2260,7 @@
       
   
 
-<span class="byline author vcard">Posted by <span class="fn">Abhijit S</span></span>
+<span class="byline author vcard">Posted by <span class="fn">Abhijit Sinha</span></span>
 
       
 
@@ -2264,6 +2283,8 @@
   <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization/" data-via="greyshell__" data-counturl="http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization/" >Tweet</a>
   
   
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
   
 </div>
 
@@ -2291,13 +2312,8 @@
   <ul>
     <li><i class="fa fa-home fa-lg"></i><a href="/"> Home </a></li>
     <li><i class="fa fa-calendar fa-lg"></i><a href="/blog/archives/"> Archives </a></li>
-    <!-- <li><i class="fa fa-leaf fa-lg"></i><a href="/red_diary/"> Red Diary </a></li> -->
-  	<!-- <li><i class="fa fa-tags fa-lg"></i><a href="/blog/categories/ctf/"> CTF </a></li> -->
-  	<li><i class="fa fa-user fa-lg"></i><a href="/about/"> About</a></li>
-  	<!-- <li><i class="fa fa-leaf fa-lg"></i><a href="/resume/"> Resume </a></li> -->
-    <!-- ><li><i class="fa fa-rss fa-lg"></i><a href="http://greyshell.github.io/atom.xml"> Feed </a></li> -->
-	  <!-- <li><i class="fa fa-apple fa-lg"></i><a href="http://en.lichess.org/@/greyshell"> lichess </a></li>
 
+  	<li><i class="fa fa-user fa-lg"></i><a href="/about/"> About</a></li>
   </ul>
 </section>
 
@@ -2312,15 +2328,20 @@
     <a href="https://github.com/greyshell" title="greyshell"><i class="fa fa-github fa-2x"></i></a>
   
 
-	<a href="https://www.linkedin.com/in/greyshell" title="linkedin"><i class="fa fa-linkedin fa-2x"></i></a>
-
   
 
   
     <a href="https://twitter.com/greyshell__" title="greyshell__"><i class="fa fa-twitter fa-2x"></i></a>
   
 
-	<a href="mailto: grey.shell@gmail.com" title="email"><i class="fa fa-envelope fa-2x"></i></a>
+  
+    <a href="mailto: greyshell@gmail.com" title="greyshell@gmail.com"><i class="fa fa-envelope fa-2x"></i></a>
+  
+
+  
+    <a href="https://www.linkedin.com/in/greyshell" title="greyshell"><i class="fa fa-linkedin fa-2x"></i></a>
+  
+
 
 </section>
 
@@ -2351,13 +2372,22 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2019 - Abhijit S 
+  Copyright &copy; 2020 - Abhijit Sinha 
 </p>
 
 </footer>
   
 
 
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 
 
 

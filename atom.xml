@@ -4,10 +4,10 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2019-12-04T21:11:46-08:00</updated>
+  <updated>2020-04-09T04:09:33-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
-    <name><![CDATA[Abhijit S]]></name>
+    <name><![CDATA[Abhijit Sinha]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
@@ -24,6 +24,8 @@
 
 
 <h2>Serialization</h2>
+
+<p>Before directly jump into the <code>gadget chain</code>, the lets start with the fundamental of <code>Serialization</code> / <code>Deserialization</code> process and try to understand the <strong>root cause</strong>.</p>
 
 <blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method</code>.</p>
 
@@ -712,6 +714,8 @@
 
 <h3>Command Execution using <code>Runtime</code></h3>
 
+<blockquote><p>First lets understand, how we can execute a command in Java.</p></blockquote>
+
 <ul>
 <li>We can use <code>Runtime</code> Object in Java to execute system command (i.e Running the gnome-calculator)</li>
 </ul>
@@ -755,6 +759,8 @@
 
 
 <h3>Reflection API</h3>
+
+<blockquote><p>What are the other ways, we can execute a command in Java.</p></blockquote>
 
 <ul>
 <li><p>Reflection is an API which is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime</code>.</p></li>
@@ -1215,7 +1221,11 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<blockquote><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></blockquote>
+<blockquote><ul>
+<li><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></li>
+<li><p>However, still we need to understand few more data structures to connect the dots.</p></li>
+</ul>
+</blockquote>
 
 <h3>HashMap</h3>
 
@@ -2171,6 +2181,16 @@
 
 <p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/calc_rce.png" alt="" /></p>
 
+<p><strong>Key take away:</strong></p>
+
+<p>The whitelisting based prevention won&rsquo;t work if that whitelist contains</p>
+
+<ul>
+<li>All classes that used to build the chain => <code>RCE</code></li>
+<li>HashSet / HashMap / arraylist => <code>DoS</code></li>
+</ul>
+
+
 <h2>References</h2>
 
 <ul>
@@ -2179,7 +2199,6 @@
 <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html</a></li>
 <li><a href="https://github.com/JackOfMostTrades/gadgetinspector">https://github.com/JackOfMostTrades/gadgetinspector</a></li>
 <li><a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java</a></li>
-<li><a href="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/demo_insecure_deserialization.zip">My proof of concept codes</a></li>
 </ul>
 
 ]]></content>
