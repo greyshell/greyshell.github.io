@@ -4,7 +4,7 @@
   <title><![CDATA[Category: web-security | Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/blog/categories/web-security/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-15T01:21:27-07:00</updated>
+  <updated>2020-05-15T01:51:02-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -651,7 +651,7 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 
 <ul>
 <li>Not always an <code>exploit</code> can be built from the result.</li>
-<li>It can produce a <code>false negative</code> effect.</li>
+<li>It can produce a <code>false negative</code> result.</li>
 </ul>
 
 
@@ -1105,7 +1105,7 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 <h3>ChainedTransformer</h3>
 
 <ul>
-<li>Shorten/compact the code for code execution.</li>
+<li>Shorten the code for code execution.</li>
 <li><strong>Key Point:</strong> Takes an <code>array of transformers</code> during initialization and <code>chains</code> them carefully maintaining their execution order.</li>
 </ul>
 
