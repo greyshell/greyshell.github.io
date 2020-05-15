@@ -6,6 +6,7 @@
 
 /*
 copy the entire in this multiline comment
+extra
 */
 
 struct contact {

