@@ -2,12 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-// this is new
-
-/*
-copy the entire in this multiline comment
-*/
-
 struct contact {
   char name[20];
   char *description;
