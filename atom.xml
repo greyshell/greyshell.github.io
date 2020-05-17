@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-15T02:08:47-07:00</updated>
+  <updated>2020-05-16T20:05:31-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -251,7 +251,7 @@ It is used to &ldquo;mark&rdquo; java classes so that objects of these classes m
 
 <ol>
 <li><p>The <code>readObject</code> method of <code>java.io.ObjectInputStream</code> is vulnerable.</p></li>
-<li><p>During the Deserialization process, the <code>readObject()</code> method is always <code>being</code> called, and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check.</code></p></li>
+<li><p>During the Deserialization process, the <code>readObject()</code> method is always being called, and it can <code>construct</code> any sort of <code>Serializable</code> object that can be found on the Java <code>classpath</code> before passing it back to the <code>caller</code> for the <code>type_check.</code></p></li>
 <li><p><code>Exception</code> can only happen if a type miss-match occurs between the return object and the expected object.</p></li>
 </ol>
 
@@ -265,15 +265,12 @@ It is used to &ldquo;mark&rdquo; java classes so that objects of these classes m
 </span></code></pre></td></tr></table></div></figure>
 
 
-<ol>
-<li>So if the constructed object <code>happens to do anything dangerous</code> during its construction, then it is too late to stop at the point of type <code>checking</code> of that <code>returned</code> object.</li>
-</ol>
-
+<p>So if the constructed object <code>happens to do anything dangerous</code> during its construction, then it is too late to stop at the point of type <code>checking</code> of that <code>returned</code> object.</p>
 
 <h2>Impact</h2>
 
 <ul>
-<li>Remote code execution through property oriented programming(i.e <code>POP</code>) / Gadget Chaining.</li>
+<li>Remote code execution through property oriented programming(i.e <code>Property Oriented Programming</code>) / Gadget Chaining.</li>
 <li>Bypass authorization / escalate privilege via Insecure Direct Object Reference if the object&rsquo;s signature is not verified.</li>
 <li>DoS like consuming the <code>Heap</code> memory.</li>
 </ul>
