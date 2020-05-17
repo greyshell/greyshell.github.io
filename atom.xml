@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-17T01:14:01-07:00</updated>
+  <updated>2020-05-17T01:33:29-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -4241,7 +4241,7 @@ For a different kernel, that libc address changes, but the offset remains the sa
 </span><span class='line'>    socket_type = stream
 </span><span class='line'>    port = 9001
 </span><span class='line'>    wait = no
-</span><span class='line'>    server = /home/asinha/Dropbox/pentest/code_dev/exploit_dev/linux_binary_exploit_code/canary_bypass_02/vuln
+</span><span class='line'>    server = /home/asinha/Dropbox/pentest/code_dev/exploit_dev/linux_binary_exploit/canary_bypass_02/vuln
 </span><span class='line'>    server_args = not_applicable
 </span><span class='line'>    user = asinha
 </span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
