@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-17T01:35:59-07:00</updated>
+  <updated>2020-05-17T01:38:31-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -4320,7 +4320,7 @@ For a different kernel, that libc address changes, but the offset remains the sa
 <h2>Reference</h2>
 
 <ul>
-<li><a href="https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit_code/canary_bypass_02">https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit_code/canary_bypass_02</a></li>
+<li><a href="https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit/canary_bypass_02">https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit/canary_bypass_02</a></li>
 </ul>
 
 ]]></content>
