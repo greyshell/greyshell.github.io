@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-17T01:11:55-07:00</updated>
+  <updated>2020-05-17T01:14:01-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -4219,9 +4219,9 @@ For a different kernel, that libc address changes, but the offset remains the sa
 
 <p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727160539468.png" alt="image-20190727160539468" /></p>
 
-<h3>Exploit the binary when it is running on a network</h3>
+<h4>Exploit the binary when it is running on a network</h4>
 
-<p>Create the following config file inside <code>/etc/xinetd.d</code> directory to run the binary as a service.</p>
+<p>Create the following config file(i.e <code>canary02</code>)  inside <code>/etc/xinetd.d</code> directory to expose the binary on <code>127.0.0.1:9001</code>.</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
