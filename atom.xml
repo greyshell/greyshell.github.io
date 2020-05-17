@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-05-16T20:05:31-07:00</updated>
+  <updated>2020-05-17T01:11:55-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -4219,6 +4219,58 @@ For a different kernel, that libc address changes, but the offset remains the sa
 
 <p><img src="http://greyshell.github.io/artifacts/canary_bypass02.assets/image-20190727160539468.png" alt="image-20190727160539468" /></p>
 
+<h3>Exploit the binary when it is running on a network</h3>
+
+<p>Create the following config file inside <code>/etc/xinetd.d</code> directory to run the binary as a service.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>service canary02
+</span><span class='line'>{
+</span><span class='line'>    type = UNLISTED
+</span><span class='line'>    protocol = tcp
+</span><span class='line'>    socket_type = stream
+</span><span class='line'>    port = 9001
+</span><span class='line'>    wait = no
+</span><span class='line'>    server = /home/asinha/Dropbox/pentest/code_dev/exploit_dev/linux_binary_exploit_code/canary_bypass_02/vuln
+</span><span class='line'>    server_args = not_applicable
+</span><span class='line'>    user = asinha
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<table>
+<thead>
+<tr>
+<th>Description  </th>
+<th> Commnad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start the service  </td>
+<td>  <code>sudo service xinetd start</code></td>
+</tr>
+<tr>
+<td>Verify if the service has been started </td>
+<td> <code>netstat -antp &amp;&amp; grep 9001</code></td>
+</tr>
+<tr>
+<td>Exploit the binary </td>
+<td> <code>python exploit06.py network -i 127.0.0.1 -p 9001   </code></td>
+</tr>
+</tbody>
+</table>
+
+
 <h2>Conclusion</h2>
 
 <p>We can prevent this exploitation by restricting the input within the size of the buffer.</p>
@@ -4263,6 +4315,13 @@ For a different kernel, that libc address changes, but the offset remains the sa
 </span><span class='line'>    Stack:    Canary found
 </span><span class='line'>    NX:       NX enabled
 </span><span class='line'>    PIE:      PIE enabled</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Reference</h2>
+
+<ul>
+<li><a href="https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit_code/canary_bypass_02">https://github.com/greyshell/exploit_dev/tree/master/linux_binary_exploit_code/canary_bypass_02</a></li>
+</ul>
 
 ]]></content>
   </entry>
