@@ -4,7 +4,7 @@
   <title><![CDATA[Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-06-29T08:20:45-07:00</updated>
+  <updated>2020-12-30T22:40:19-08:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -18,7 +18,7 @@
     <link href="http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java/"/>
     <updated>2019-11-22T22:17:55-08:00</updated>
     <id>http://greyshell.github.io/blog/2019/11/22/insecure-deserialization-java</id>
-    <content type="html"><![CDATA[<p>I was always curious about how the actual remote code execution occurs during the Insecure Deserialization process. So I thought of giving a try to understand the known harmful <code>gadgets</code> from <code>commons-collections-3.2.2.jar</code> and develop the entire chain from scratch.</p>
+    <content type="html"><![CDATA[<p>I was always curious about how the actual remote code execution occurs during the Insecure <code>Deserialization</code> process. So I thought of giving a try to understand the known harmful <code>gadgets</code> from <code>commons-collections-3.2.2.jar</code> and develop the entire chain from scratch.</p>
 
 <!-- more -->
 
@@ -2193,7 +2193,7 @@ It is used to &ldquo;mark&rdquo; java classes so that objects of these classes m
     <link href="http://greyshell.github.io/blog/2019/07/16/canary-bypass02/"/>
     <updated>2019-07-16T20:33:35-07:00</updated>
     <id>http://greyshell.github.io/blog/2019/07/16/canary-bypass02</id>
-    <content type="html"><![CDATA[<p>Linux binary exploitation is a very <code>interesting</code> topic. Thanks to my good friend <a href="https://dhavalkapil.com/">vampire</a>, he gave me this challenge and helped me to understand a stack <code>canary</code> bypass technique.</p>
+    <content type="html"><![CDATA[<p>Linux <code>binary</code> exploitation is a very <code>interesting</code> topic. Thanks to my good friend <a href="https://dhavalkapil.com/">vampire</a>, he gave me this challenge and helped me to understand a stack <code>canary</code> bypass technique.</p>
 
 <!-- more -->
 
@@ -4329,7 +4329,7 @@ For a different kernel, that libc address changes, but the offset remains the sa
   <entry>
     <title type="html"><![CDATA[Exploiting HP OpenView NNM - B.07.53]]></title>
     <link href="http://greyshell.github.io/blog/2016/11/07/hpnmm-B.07.53-exploit/"/>
-    <updated>2016-11-07T18:23:51-08:00</updated>
+    <updated>2016-11-07T20:23:51-06:00</updated>
     <id>http://greyshell.github.io/blog/2016/11/07/hpnmm-B.07.53-exploit</id>
     <content type="html"><![CDATA[<p>In <a href="https://www.defcon.org/html/defcon-16/dc-16-speakers.html#Aharoni">DEFCON #16</a>, there was an interesting session on <code>HP OpenView NNM</code> exploitation <strong><em>&ldquo;from bug to 0 day&rdquo;</em></strong> presented by <em>muts</em>. While watching his walk-through, I found that this particular exploit development process was extremely intense and challenging. To better understand the concepts, I decided to take that as an <strong>exercise</strong> and try to reproduce the same in my local environment.</p>
 
