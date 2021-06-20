@@ -4,7 +4,7 @@
   <title><![CDATA[Category: web-security | Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/blog/categories/web-security/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2020-12-30T22:40:19-08:00</updated>
+  <updated>2021-06-19T19:10:39-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -32,7 +32,7 @@ It is used to &ldquo;mark&rdquo; java classes so that objects of these classes m
 
 <p>The fundamental <code>purpose</code> of serialization is to <code>convert</code> the <code>data structure</code> (i.e., state of an object) into a <code>format</code> (for Example: <code>byte stream</code>) that can be <code>stored</code> and <code>transmitted</code> over a network link for future <code>consumption.</code></p>
 
-<p><strong> Example</strong>:</p>
+<p><strong>Example</strong>:</p>
 
 <p>Serialize the <code>User</code> class.</p>
 
@@ -176,7 +176,7 @@ It is used to &ldquo;mark&rdquo; java classes so that objects of these classes m
 
 <p>Deserialization is the reverse process where the <code>byte stream</code> is used to <code>recreate</code> the <code>actual</code> Java object in memory.</p>
 
-<p><strong> Example</strong>:</p>
+<p><strong>Example</strong>:</p>
 
 <p>Deserialize <code>User</code> class.</p>
 
@@ -485,7 +485,7 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 
 <h2>How to Fix</h2>
 
-<ol>
+<ul>
 <li>Don&rsquo;t blindly accept serialized objects from <code>untrusted</code> sources. Implement integrity check / sign the serialized object to prevent hostile object creation/tampering.</li>
 <li>Whitelist based approach to harden own <code>java.io.ObjectInputStream</code>:
 
@@ -495,7 +495,7 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 <li>Overwrite the <code>resolveClass()</code> method and check if the <code>cls.getName()</code> exists within the <code>HashSet</code> else throw <code>InvalidClassException</code> exception.</li>
 </ol>
 </li>
-</ol>
+</ul>
 
 
 <p><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -612,23 +612,19 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 
 <p><img src="/artifacts/insecure_deserialization_java.assets/fix.png" alt="fix" /></p>
 
-<ol>
+<ul>
 <li>Virtual patching / JVM wide fix: Harden, all <code>java.io.ObjectInputStream</code> usage with an Agent through a blacklist. Example: <code>contrast-rO0</code>.</li>
 <li>The <code>readObject()</code> method should be inside the <code>try/catch</code> block because any mismatch occurs between the <code>serialized</code> object and <code>expected</code> object during type_check, then the <code>Exception</code> has to be handled properly.</li>
 <li><code>transient</code> keyword is used not to <code>serialize</code> a variable like the <code>password</code> field. When JVM comes across <code>transient</code> or <code>static</code> keyword, it ignores the original value of the variable and saves the <code>default</code> value of that variable data type.</li>
-<li>Some objects may be forced to implement <code>Serializable</code> due to their hierarchy. To guarantee that your application objects can&rsquo;t be deserialized, a <code>readObject()</code> method should be declared (with a <code>final</code> modifier) which always throws an exception:</li>
-</ol>
-
-
-<pre><code class="java">private final void readObject(ObjectInputStream in) throws java.io.IOException {
-   throw new java.io.IOException("Cannot be deserialized");
+<li><p>Some objects may be forced to implement <code>Serializable</code> due to their hierarchy. To guarantee that your application objects can&rsquo;t be deserialized, a <code>readObject()</code> method should be declared (with a <code>final</code> modifier) which always throws an exception:
+<code>java
+private final void readObject(ObjectInputStream in) throws java.io.IOException {
+ throw new java.io.IOException("Cannot be deserialized");
 }
-</code></pre>
-
-<ol>
-<li>In current Java, Java Security Manager does not allow blacklisted classes to be serialized, and the <code>enableUnsafeSerialization</code> is set to <code>FALSE.</code></li>
+</code></p></li>
+<li><p>You can use Java Security Manager to block specific classes.</p></li>
 <li>Detective control: <code>Log</code> the exceptions and failures that happen during deserialization.</li>
-</ol>
+</ul>
 
 
 <blockquote><p>DoS is unavoidable if the expected object type is HashSet / HashMap / ArrayList.</p></blockquote>
@@ -1646,7 +1642,7 @@ java.io.InvalidObjectException: interface limit exceeded: 2147483639
 <li>As you can observe, till this point, <code>TiedMapEntry.hashcode()</code> is not called anywhere.</li>
 <li>Serialize this <code>HashBag</code> Object.</li>
 <li>During the deserialization process, the program tries to recreate the same object(i.e., <code>HashBag</code>) in the process memory.</li>
-<li>This <code>HashBag</code> => underlying <code>HashMap</code> table should be having one entry, where key= <code>TiedMapEntry</code> Object and count/ value =1. So, to recreate that entry inside the <code>HashBag's</code> HashMap&rsquo;s<code>table, the table's index needs to be known. Due to this,</code>TiedMapEntry.hashcode()` is called to calculate that index dynamically.</li>
+<li>This <code>HashBag</code> => underlying <code>HashMap</code> table should be having one entry, where key= <code>TiedMapEntry</code> Object and count/ value =1. So, to recreate that entry inside the <code>HashBag's</code> HashMap&rsquo;s table, the table&rsquo;s index needs to be known. Due to this, <code>TiedMapEntry.hashcode()</code> is called to calculate that index dynamically.</li>
 <li>Here the key point is, <code>TiedMapEntry.hashcode()</code> method is getting called the first time, which triggers the code execution.</li>
 </ol>
 
