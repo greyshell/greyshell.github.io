@@ -4,7 +4,7 @@
   <title><![CDATA[Category: web-security | Greyshell's Diary]]></title>
   <link href="http://greyshell.github.io/blog/categories/web-security/atom.xml" rel="self"/>
   <link href="http://greyshell.github.io/"/>
-  <updated>2021-06-19T19:10:39-07:00</updated>
+  <updated>2021-06-21T16:45:35-07:00</updated>
   <id>http://greyshell.github.io/</id>
   <author>
     <name><![CDATA[Abhijit Sinha]]></name>
@@ -1800,8 +1800,6 @@ java.lang.UnsupportedOperationException: Serialization support for org.apache.co
 
 [SNIPPED]
 </code></pre>
-
-<p>It seems that the <code>Java Security Manager</code> detects the known <code>bad</code> gadgets.</p>
 
 <p>By default, serialization support for <code>org.apache.commons.collections.functors.InvokerTransformer</code> is <code>disabled</code>.</p>
 
