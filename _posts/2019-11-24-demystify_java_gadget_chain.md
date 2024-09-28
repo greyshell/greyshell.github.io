@@ -24,14 +24,12 @@ We need to use `property oriented programming` to build a `RCE gadget` from the 
 We can use the Java `Runtime` object and its `exec()` method to execute any `system` commands.
 - for example, running the `mate-calculator` in linux.
 
-![](image%202.png)
 
 ## 2. Command Execution using Reflection API and `Runtime` object
 * Java `Reflection API` is used to `examine` or `modify` the `behavior` of methods, classes, interfaces at `runtime`.
 - Through reflection API, we can invoke any method at `runtime` via `invoke()` function.
   - Here, we are trying to invoke `getRuntime()` method to get a `Runtime` object.
 
-![](image.png)
 
 ## 3. Command Execution using `ConstantTransformer` and `InvokerTransformer` together
 
@@ -45,11 +43,9 @@ Before directly jump into the `Constant Transformer` and `InvokerTransformer`, f
 For example, we can create a class `MyReverse` by implementing the `Transformer`interface and `transform()` method.
 - Here, in `transform()` method, we specify how to reverse a `String` type object.
 
-![](image%203.png)
 
 When we call the `transform()` method via passing the argument of a `String` type object, it reverses the string.
 
-![](image%204.png)
 
 > The return type of the `transform()` method is `Object` therefore it can return any type of object.
 
@@ -58,10 +54,8 @@ In contrast to the `Transformer` class, it always returns the `same object` that
 
 - If we Initialize a `ConstantTransformar` with `Runtime.class` and can call the `transform()` method with `any object`(for example, `HashSet`), we will always get the `Runtime.class` type object.
 
-![](image%205.png)
 
 ### InvokerTransformer
 * During initialization, it takes a `method name` with optional parameters.
 * On `transform`, it calls that method for the object provided with the parameters.
 
-![](image%206.png)
