@@ -27,3 +27,5 @@ _sass/dist
 assets/js/dist
 
 .ruby-version
+
+.DS_Store

@@ -29,13 +29,13 @@ github:
   username: greyshell # change to your GitHub username
 
 twitter:
-  username: twitter_username # change to your Twitter username
+  username: greyshell__ # change to your Twitter username
 
 social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
   name: Abhijit Sinha
-  email: example@domain.com # change to your email address
+  email: grey.shell@gmail.com # change to your email address
   links:
     # The first element serves as the copyright owner's link
     - https://twitter.com/greyshell__ # change to your Twitter homepage
@@ -88,7 +88,7 @@ pageviews:
 #     light — Use the light color scheme
 #     dark — Use the dark color scheme
 #
-theme_mode: # [light | dark]
+theme_mode: dark # [light | dark]
 
 # The CDN endpoint for media resources.
 # Notice that once it is assigned, the CDN url
@@ -98,7 +98,7 @@ theme_mode: # [light | dark]
 cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar:
+avatar: assets/hat_man.png
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
