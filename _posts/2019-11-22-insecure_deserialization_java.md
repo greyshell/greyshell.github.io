@@ -95,6 +95,8 @@ From a Whitebox perspective
 
 ### Remote Code Execution
 
+TBD
+
 ## How to Mitigate
 
 1. Do not blindly accept serialized objects from untrusted sources. Implement integrity checks or sign the serialized objects to prevent tampering or the creation of malicious objects.
