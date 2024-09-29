@@ -47,15 +47,15 @@ The process of `re-creating` the actual object in memory from byte stream is cal
 
 - [x] Some objects may be required to implement `Serializable` due to inheritance for example `SuperUser`. It inherites the base class `User` that implements `Serializable`.
 
-To ensure that such objects (e.g., `SuperUser`) cannot be deserialized, we can override the `readObject()` method and mark it as final to throw an exception during the deserialization process.
+To ensure that such objects (e.g., `SuperUser`) cannot be deserialized, we can override the `readObject()` method and mark it as `final` to throw an exception during the deserialization process.
 
 ![stop_deserialization_using_final](assets/2019-11-22-insecure_deserialization_java.assets/stop_deserialization_using_final.png)
 
 ## The Bug
 
-1. The readObject method of `java.io.ObjectInputStream` is vulnerable.
+1. The `readObject()` method of `java.io.ObjectInputStream` is vulnerable.
 
-2. During the Deserialization process, the `readObject()` method is always being called, and it can construct any sort of Serializable object that can be found on the Java classpath before passing it back to the caller for the type_check.
+2. During the Deserialization process, the `readObject()` method is always being called, and it can construct any sort of Serializable object that can be found on the Java classpath before passing it back to the caller for the type check.
 
 3. An Exception occurs only when there’s a type mismatch between the returned object and the expected object. If the constructed object performs any harmful actions during its construction, it’s already too late to prevent them by the time type checking.
 
@@ -85,17 +85,73 @@ From a Whitebox perspective
 
 ## How to Exploit
 
-### Denial of Service
+### Perform Denial of Service
 
-1. Generate a malicious serialized object.
+1. Generate a malicious serialized object using `DoSExploit.java`.
 
 2. During deserialization, when the application attempts to reconstruct the object in memory, it consumes 100% of the CPU resources.
 
 ![dos_deserialization](assets/2019-11-22-insecure_deserialization_java.assets/dos_deserialization.png)
 
-### Remote Code Execution
+### Execute Remote Code
 
-TBD
+#### Leveraging `ysoserial`
+
+- Generate the rce payload to open `gnome-calculator` using the latest [ysoserial](https://github.com/frohoff/ysoserial).
+
+```bash
+java -jar ysoserial-all.jar CommonsCollections7 gnome-calculator > bad_serialized_object_ysoserial.ser
+```
+
+- [x] The modern Java Security Manager by default includes protections against unsafe deserialization by blocking blacklisted gadgets. Therefore, `disabling` that feature in code by adding the following line in `DemoDeserilization.java`
+
+```java
+// in current Java, by default enableUnsafeSerialization is set to 'false'
+System.setProperty(
+        "org.apache.commons.collections.enableUnsafeSerialization",
+        "true");
+```
+
+During deserialization, when the application tries to reconstruct the object in memory, it launches the calculator.
+
+![rce_ysoserial](assets/2019-11-22-insecure_deserialization_java.assets/rce_ysoserial.png)
+
+
+#### Handcraft the payload
+
+> I’ve put together a detailed blog [post](https://greyshell.github.io/posts/demystify_java_gadget_chain/) on how to create the entire RCE gadget chain from scratch.
+{: .prompt-tip }
+
+- Set up the exploit dev environment
+    - JDK version: `openjdk-23`
+    - Add `commons-collectios-3.2.2.jar`, `commons-lang3-3.7.jar` and `mockito-all-1.9.5.jar` into the Java classpath.
+
+![add_lib](assets/2019-11-22-insecure_deserialization_java.assets/add_lib.png)
+
+
+- Download the exploit code - [RCE.java](https://github.com/greyshell/java_insecure_deserialization/blob/main/src/RCE.java).
+
+> Java’s **strong encapsulation** introduced in **Java 9+**, which restricts reflective access to certain internal Java classes and fields by default. This is especially relevant when using libraries or tools that attempt to access private or internal fields of classes like `HashMap`.
+{: .prompt-danger }
+
+- [x] By adding the `--add-opens` option, we can explicitly open the necessary package (`java.util`) for reflection. In IntelliJ IDEA -> Run -> Edit Configurations -> In **VM options** field, add the following
+
+```text
+--add-opens java.base/java.util=ALL-UNNAMED
+```
+
+![add_vm_options2](assets/2019-11-22-insecure_deserialization_java.assets/add_vm_options.png)
+
+- Execute `RCE.java` and generate the `rce_serialized_object`.
+
+![crete_rce_object](assets/2019-11-22-insecure_deserialization_java.assets/create_rce_object.png)
+
+During deserialization, when the application attempts to reconstruct the object in memory, it opens the calculator.
+
+![rce_calculator](assets/2019-11-22-insecure_deserialization_java.assets/rce_calculator.png)
+
+
+
 
 ## How to Mitigate
 
