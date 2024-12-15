@@ -161,7 +161,7 @@ We can chain all three types of transformers and perform RCE.
 4. As you can observe, till this point, `TiedMapEntry.hashcode()` is not called anywhere.
 5. Serialize this `HashBag` Object.
 
-An exception might still occur while creating the serialized object, as serialization support is now disabled by default for `org.apache.commons.collections.functors.InvokerTransformer` is `disabled`.
+An exception might still occur while creating the serialized object, as serialization support is now disabled by default for `org.apache.commons.collections.functors.InvokerTransformer`.
 
 Therefore enable the support in both producer and consumer programs to serialize / deserialize the object without any exception
 
