@@ -29,6 +29,7 @@
 
 ## how to publish
 
+- add the post and corrosponding assets
 - git commit -am "publish post"
 - git push
 - check the site at https://greyshell.github.io/
