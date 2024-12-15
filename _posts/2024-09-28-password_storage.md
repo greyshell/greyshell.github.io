@@ -1,5 +1,5 @@
 ---
-title: "Password Storage"
+title: "Secure Way to Store Passwords"
 date: 2024-09-28 08:17:55 -0800
 categories: [crypto]
 tags: [hashing]     # TAG names should always be lowercase
