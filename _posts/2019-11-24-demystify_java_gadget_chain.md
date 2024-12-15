@@ -151,7 +151,7 @@ We can chain all three types of transformers and perform RCE.
 > Therefore, we need to find a way to prevent the `TiedMapEntry.hashcode()` method from being invoked while creating the exploit payload.
 {: .prompt-warning }
 
-### Resolve using mokito
+### Resolve using mockito
 
 1. Create a `HashBag` instance and add any `Object` into it.
 2. This will invoke Object’s `hashcode()` method and based on the hashcode / index, the underlying `HashBag's` => `HashMap` table entry will be updated with `key = Object` and `value / count = 1`.
