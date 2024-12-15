@@ -37,15 +37,15 @@ The process of `re-creating` the actual object in memory from byte stream is cal
 
 ### Observations
 
-- [x] For instance, if a serialized object is created using the `User` class but type checking during deserialization is performed with the `SuperUser` class, then application will throw a `ClassCastException`.
+- [x] Case 1: If a serialized object is created using the `User` class but during deserialization when the `type checking` is performed with the `SuperUser` class, then application throws a `ClassCastException`.
 
 ![consume_superclass](assets/2019-11-22-insecure_deserialization_java.assets/consume_superclass.png)
 
-- [x] However, if a serialized object is created using the `SuperUser` class but type checking during deserialization is performed with the `User` class, the application will not throw any exception because `SuperUser` class is derived from the base class `User`.
+- [x] Case 2: If a serialized object is created using the `SuperUser` class but during deserialization when the `type checking` is performed with the `User` class, then the application does not throw any exception because `SuperUser` class is derived from the base class `User`.
 
 ![consume_baseclass](assets/2019-11-22-insecure_deserialization_java.assets/consume_baseclass.png)
 
-- [x] Some objects may be required to implement `Serializable` due to inheritance for example `SuperUser`. It inherites the base class `User` that implements `Serializable`.
+- [x] Some objects may be required to implement `Serializable` due to `inheritance` for example `SuperUser` class. It inherits the base class `User` that implements `Serializable`.
 
 To ensure that such objects (e.g., `SuperUser`) cannot be deserialized, we can override the `readObject()` method and mark it as `final` to throw an exception during the deserialization process.
 
@@ -97,7 +97,7 @@ From a Whitebox perspective
 
 #### Leveraging `ysoserial`
 
-- Generate the rce payload to open `gnome-calculator` using the latest [ysoserial](https://github.com/frohoff/ysoserial).
+- Generate the RCE payload to open `gnome-calculator` using the latest [ysoserial](https://github.com/frohoff/ysoserial).
 
 ```bash
 java -jar ysoserial-all.jar CommonsCollections7 gnome-calculator > bad_serialized_object_ysoserial.ser
@@ -140,7 +140,7 @@ During deserialization, when the application tries to reconstruct the object in 
 --add-opens java.base/java.util=ALL-UNNAMED
 ```
 
-![add_vm_options2](assets/2019-11-22-insecure_deserialization_java.assets/add_vm_options.png)
+![add_vm_options](assets/2019-11-22-insecure_deserialization_java.assets/add_vm_options.png)
 
 - Execute `RCE.java` and generate the `rce_serialized_object`.
 
@@ -149,8 +149,6 @@ During deserialization, when the application tries to reconstruct the object in 
 During deserialization, when the application attempts to reconstruct the object in memory, it opens the calculator.
 
 ![rce_calculator](assets/2019-11-22-insecure_deserialization_java.assets/rce_calculator.png)
-
-
 
 
 ## How to Mitigate
@@ -162,21 +160,23 @@ During deserialization, when the application attempts to reconstruct the object 
     - Extend `ObjectInputStream` to create a custom `SafeObjectInputStream` class.
     - Override the `resolveClass()` method to verify if `cls.getName()` exists in the `HashSet`, otherwise, throw an `InvalidClassException`.
 
-When we provide any object other than `User` type, it throws exception.
+For example,
+
+- When we provide any object other than `User` type, it throws exception.
 
 ![bad_object](assets/2019-11-22-insecure_deserialization_java.assets/bad_object.png)
 
 
-When we provide `User` type object, it does not throw any exception.
+- When we provide expected `User` type object, it does not throw any exception.
 
 ![good_object](assets/2019-11-22-insecure_deserialization_java.assets/good_object.png)
 
-> A Denial of Service (DoS) is inevitable if the `expected` object type is a `HashSet`, `HashMap`, or `ArrayList`.
+> A Denial of Service (DoS) is `inevitable` if the `expected` object type is a `HashSet`, `HashMap`, or `ArrayList`.
 {: .prompt-danger }
 
 
+### Defense in depth
 
-Defense in depth
 1. Use the `transient` keyword for sensitive fields that you do not want to be serialized. The `transient` keyword prevents a variable, like a password field, from being serialized. When the JVM encounters a variable marked as transient or `static`, it disregards its original value and instead saves the default value corresponding to that variable’s data type.
 
 2. For detective controls, log any exceptions or failures that occur during the deserialization process.
@@ -194,4 +194,4 @@ System.setProperty(
 
 ## Code Repo
 
-https://github.com/greyshell/java_insecure_deserialization
+<https://github.com/greyshell/java_insecure_deserialization>
