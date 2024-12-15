@@ -125,6 +125,6 @@ compare_result = hmac.compare_digest(str,str)
 ```
 
 
-## Code Repo
+## References
 
-https://github.com/greyshell/python_programming/tree/master/crypto/password_hashing
+- Code Repo: <https://github.com/greyshell/python_programming/tree/master/crypto/password_hashing>

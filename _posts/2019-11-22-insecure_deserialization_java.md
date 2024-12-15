@@ -192,6 +192,6 @@ System.setProperty(
 ```
 
 
-## Code Repo
+## References
 
-<https://github.com/greyshell/java_insecure_deserialization>
+- Code Repo: <https://github.com/greyshell/java_insecure_deserialization>

@@ -486,4 +486,4 @@ The exploit code failed because the RDI register did not contain the correct add
 
 ## References
 
-- <https://github.com/greyshell/linux_exploit_dev/tree/main/exploits/vampire/canary_bypass>
+- Code Repo: <https://github.com/greyshell/linux_exploit_dev/tree/main/exploits/vampire/canary_bypass>
