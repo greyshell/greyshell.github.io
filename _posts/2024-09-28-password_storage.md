@@ -115,8 +115,8 @@ tags: [hashing]     # TAG names should always be lowercase
 
 ## Summary: How to store and verify password
 
-1. Use argon2 / scrypt.
-2. Use `pepper` along with the `salt` to add defense in depth.
+1. Use `pepper` to add defense in depth.
+2. Use argon2 / scrypt algorithm.
 3. Avoid directly comparing two hashes as strings. If the application lacks rate limiting or CAPTCHA protection, it leaves the door open for attackers to execute a timing attack to guess the password.
    - Solution: XOR two hashes and compare with 0 or 1.
    - python3: Use compare_digest(stored_valid_sig, user_provided_sig) method from `hmac` lib.
