@@ -477,7 +477,7 @@ pwndbg> print main
 $2 = {<text variable, no debug info>} 0x4007f7 <main>
 ```
 
-Run the python [code](https://github.com/greyshell/linux_exploit_dev/blob/main/exploits/vampire/canary_bypass/exploit06.py) to anticipate a shell.
+Run the python [code](https://github.com/greyshell/linux_exploit_dev/blob/main/exploits/vampire/canary_bypass/exploit07.py) to anticipate a shell.
 
 ### Facing failure
 
