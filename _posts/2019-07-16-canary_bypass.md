@@ -46,6 +46,10 @@ Instruction to compile the code via `gcc`.
 
 ```bash
 gcc vuln.c -o vuln
+
+# Reference: https://github.com/greyshell/linux_exploit_dev/blob/main/exploits/vampire/canary_bypass/Makefile
+# compile the code using Makefile with default gcc protections
+make all
 ```
 
 
@@ -338,7 +342,7 @@ In order to print a string, `puts()` takes only one argument - a `pointer` to a 
 
 ![puts_manual](assets/2019-07-16-canary_bypass.assets/puts_manual.png)
 
-To pass the arguments to `puts()` function, we need to load the `edi` register with an address we want to leak.
+To pass the arguments to `puts()` function, we need to load the `rdi` register with an address we want to leak.
 
 Search a gadget for `POP RDI; RETN`
 
@@ -469,6 +473,15 @@ Therefore. if we jump back to `main()`, then again, we can control our input.
 
 1. We need to replace `0xdeadbeef` with the address of `main()`.
 2. We need to take control of the `rip` again through `canary` corruption, but this time, during stack step up, we call `system('\bin\sh')` directly instead of calling `puts()`.
+3. In order to set the argument of `system` function, we need to load the address of the `/bin/sh` string into the RDI register.
+4. As we already have the libc leak, therefore we can directly find the gadget - `pop rdi, retn` from libc.
+
+```bash
+ROPgadget --binary /lib/x86_64-linux-gnu/libc.so.6 | grep "pop rdi" | grep "ret"
+...
+0x0000000000021112 : pop rdi ; ret
+...
+```
 
 ### Find the address of main()
 
@@ -477,12 +490,11 @@ pwndbg> print main
 $2 = {<text variable, no debug info>} 0x4007f7 <main>
 ```
 
+## The Shell
+
 Run the python [code](https://github.com/greyshell/linux_exploit_dev/blob/main/exploits/vampire/canary_bypass/exploit07.py) to anticipate a shell.
 
-### Facing failure
-
-The exploit code failed because the RDI register did not contain the correct address of `/bin/sh`.
-
+![shell](assets/2019-07-16-canary_bypass.assets/shell.png)
 
 ## References
 
