@@ -31,7 +31,7 @@ We need to use `property oriented programming` to build a `RCE gadget` from the 
 ## Command Execution using `Runtime` object directly
 
 We can use the Java `Runtime` object and its `exec()` method to execute any `system` commands.
-- for example, running the `mate-calculator` in linux.
+- for example, running the `gnome-calculator` in linux.
 
 ![rce01](assets/2019-11-24-demystify_java_gadget_chain.assets/rce01.png)
 
