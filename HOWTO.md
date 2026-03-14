@@ -13,7 +13,9 @@
 ## how to post
 
 - copy an existing post from `_post` folder as template.
-- save the post related assets inside assets folder. create a folder with the same filename as post.
+- save the post related assets inside assets folder.
+    - create a folder with the same filename as the post.
+    - images can't be referenced anywhere, it should always be stored under `assets` directory.
 - for pasting the clipboard data use `pngpaste image_name.png`.
 - example: `![image_name](assets/post_name.assets/image_name.png)`
 - make sure to put extra line before and after the image_link to avoid `ERROR Errno::ECONNRESET`

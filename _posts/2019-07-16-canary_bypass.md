@@ -170,6 +170,7 @@ objdump -d -M intel vuln
 
 ![assembly](assets/2019-07-16-canary_bypass.assets/assembly.png)
 
+
 ## Dynamic Analysis
 
 To verify the memory layout during the first `scanf()` call inside the  `main()` frame, lets send input via python.
