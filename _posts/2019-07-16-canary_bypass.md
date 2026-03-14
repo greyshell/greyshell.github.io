@@ -61,6 +61,10 @@ make all
 - Tmux, ROPgadget, IDA64_v8.4 freeware, Objdump, checksec
 
 
+> To replicate the steps, use the [exploit_dev](https://hub.docker.com/r/greyshell/exploit_dev) docker image from docker hub. 
+> That image provides a pre-configured environment with all the tools necessary to reproduce the techniques described in the writeup.
+{: .prompt-tip}
+
 ## OS & Binary Protections
 
 Get the `ASLR` status of my environment.
