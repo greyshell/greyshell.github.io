@@ -29,3 +29,7 @@ assets/js/dist
 .ruby-version
 
 .DS_Store
+# fix the vs code image display
+_posts/assets
+
+.gitignore
