@@ -204,7 +204,7 @@ x/20gx $rsp
 ![exploit01_3](assets/2019-07-16-canary_bypass.assets/exploit01_3.png)
 
 
-- `ASLR` is activated in the host therefore this `libc` address changes in every program `restart`. However we can always get a libc address from a fixed offset `[RSP + 8]`
+- `ASLR` is activated in the host therefore this `libc` address changes in every program `restart`. However we can always get a libc address from a fixed offset (`x/gx $rsp + 56`).
 - We can't `leak` the `canary` value because there are no `puts()` / `printf()` after the last `scanf()`.
 - The binary has partial RELRO, allowing us to overwrite entries in the .GOT.
   - Additionally, since this is a non-PIE binary, the .GOT address is fixed.
